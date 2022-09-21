@@ -1,23 +1,27 @@
-import logo from './logo.svg';
+import { useEffect } from 'react';
 import './App.css';
+import Board from './Board'
 
 function App() {
+  const generateBoard= () => {
+    const setBoard = () => {
+      let answer = {}
+      for (let i = 0; i < 100; i++) {
+       answer['a'+i]= ''
+      }
+      return answer
+    }
+    let board = setBoard()
+    return board
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div style={{marginTop:'30px',marginBottom:'30px'}}>WELCOME TO BATTLESHIP</div>
+      <div style={{display:'flex', justifyContent: 'space-evenly'}}>
+        <Board board={generateBoard()} player={'player'} />
+        <Board board={generateBoard()} player={'ai'}/>
+      </div>
     </div>
   );
 }
