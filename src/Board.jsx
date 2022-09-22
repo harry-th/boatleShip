@@ -56,7 +56,7 @@ let aiAttack = () => {
     let element = (index) => { 
       let squareID = ''
       player === 'player' ? squareID = boardState['a'+index] : squareID = enemyBoardState['a'+index]
-      return <div key={index} style={{'backgroundColor':  squareID === 'missed!' ? 'white' : squareID === 'hit!' ? 'red' : 'blue'}}
+      return <div key={index} style={{'backgroundColor':  squareID === 'missed!' ? 'white' : squareID === 'hit!' ? 'red' : 'blue', 'pointerEvents': squareID ==='hit!' ||squareID ==='missed!' ? 'none' : 'auto'}}
   onClick={()=>checkHit(index)}
   className={styles.square}
   >
