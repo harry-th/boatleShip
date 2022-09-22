@@ -1,22 +1,30 @@
 import React, {useState } from 'react'
 import styles from './Board.module.css'
-const  Board = ({player, enemyBoardState, setEnemyBoardState, board, targets}) => { 
-// console.log(enemyBoardState)
+const  Board = ({player, enemyBoardState, setEnemyBoardState, board}) => { 
 
+const generateTargets = () => {
+  let targets = []
+  let i = 0;
+  while (i<10) {
+    targets.push(Math.floor(Math.random()*100))
+    i++
+  }
+  return targets
+}
 
 
   const [boardState, setBoardState] = useState(board)
   const [yourHits, setHits] = useState(0)
   const [enemyHits, setEnemyHits] = useState(0)
-
-
+const [targets, setTargets] = useState(generateTargets())
+console.log(targets)
 
 
 let aiAttack = () => {
   let enemyAttack = Math.floor(Math.random()*100)
   let hitOrMiss = Object.values(targets).includes(enemyAttack)
   let state = hitOrMiss ? 'hit!' : 'missed!'
-  console.log(enemyBoardState)
+  // console.log(enemyBoardState)
   let newState = {...enemyBoardState}
   newState['a'+enemyAttack] = state
   setEnemyBoardState(newState)
@@ -38,7 +46,7 @@ let aiAttack = () => {
     setBoardState(newState)
     if (hitOrMiss) {
     setHits((hits)=>hits+1)
-    console.log(yourHits)
+    // console.log(yourHits)
     if(yourHits>8) alert('you Win')
       alert('Nice Shot!')
     }
