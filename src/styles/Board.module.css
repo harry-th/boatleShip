@@ -1,0 +1,25 @@
+.square {
+  width: 10%;
+  height: 10%;
+  background-color: blue;
+  display: inline-block;
+}
+.square.hit {
+  background-color: red;
+  pointer-events: none;
+}
+.square.missed {
+  background-color: white;
+  pointer-events: none;
+}
+.square.mine {
+  background-color: black;
+}
+.square.hover {
+  background-color: black;
+}
+
+.board {
+  width: 400px;
+  height: 400px;
+}/*# sourceMappingURL=Board.module.css.map */

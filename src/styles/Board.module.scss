@@ -1,0 +1,24 @@
+.square {
+  width: 10%;
+  height: 10%;
+  background-color: blue;
+  display: inline-block;
+  &.hit {
+    background-color: red;
+    pointer-events: none;
+  }
+  &.missed {
+    background-color: white;
+    pointer-events: none;
+  }
+  &.mine {
+    background-color: black;
+  }
+  &.hover {
+    background-color: black;
+  }
+}
+.board {
+  width: 400px;
+  height: 400px;
+}
