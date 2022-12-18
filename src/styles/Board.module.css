@@ -4,6 +4,9 @@
   background-color: blue;
   display: inline-block;
 }
+.square.inactive {
+  pointer-events: none;
+}
 .square.hit {
   background-color: red;
   pointer-events: none;

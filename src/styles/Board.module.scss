@@ -3,6 +3,9 @@
   height: 10%;
   background-color: blue;
   display: inline-block;
+  &.inactive {
+    pointer-events: none;
+  }
   &.hit {
     background-color: red;
     pointer-events: none;

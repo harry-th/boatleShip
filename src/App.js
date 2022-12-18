@@ -1,117 +1,151 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import Board from './Board'
+import { useAi } from './useAi';
+import { useCookies } from 'react-cookie';
+import generateBoard from './helpers/generateBoard';
+var randomstring = require("randomstring");
 
 function App() {
-  const generateBoard = () => {
-    const setBoard = () => {
-      let answer = {}
-      for (let i = 0; i < 100; i++) {
-        answer[i] = { state: null, hover: false }
-      }
-      return answer
-    }
-    let board = setBoard()
-    return board
-  }
 
-  const [enemyBoatPlacements, setEnemyBoatPlacements] = useState([])
-  const [enemyBoats, setEnemyBoats] = useState([2, 3, 4, 5])
-
-
-  const generateTargets = () => {
-    let targets = []
-    let boatPlacementsHolder = null
-    let q = 0;
-    while (q < enemyBoats.length) {
-      let orientationTruth = Math.random() > 0.5
-      let orientation = orientationTruth ? 'h' : 'v'
-      let boundaries = orientationTruth ? Array(10).fill().map((item, i) => i && (i * 10)).filter(item => item) : Array(10).fill().map((item, i) => i + 100)
-      let boatLength = [...enemyBoats][q]
-      let array = []
-      for (const b of boundaries) {
-        for (let i = 1; i < boatLength; i++) {
-          orientationTruth ? array.push(b - i) : array.push(b - i * 10)
-        }
-      }
-      boundaries = boundaries.concat(array)
-
-      if (boatPlacementsHolder) {
-        for (const boatP in boatPlacementsHolder) {
-          if (orientationTruth) {
-            boundaries.push(...boatPlacementsHolder[boatP].positions)
-            for (const pos of boatPlacementsHolder[boatP].positions) {
-              for (let i = 1; i <= boatLength; i++) {
-                boundaries.push(pos - i)
-              }
-            }
-          } else {
-            boundaries.push(...boatPlacementsHolder[boatP].positions)
-            for (const pos of boatPlacementsHolder[boatP].positions) {
-              for (let i = 1; i <= boatLength; i++) {
-                boundaries.push(pos - i * 10)
-              }
-            }
-          }
-        }
-      }
-      let useableBoard = Array(100).fill().map((non, i) => {
-        return i
-      }).filter((item) => {
-        return !boundaries.includes(item)
-      })
-      let index = useableBoard[Math.floor(Math.random() * useableBoard.length)]
-      let positions = Array(boatLength).fill().map((item, i) => {
-        return orientation === 'h' ? index + i : index + i * 10
-      })
-      targets = targets.concat(positions)
-      boatPlacementsHolder = { ...boatPlacementsHolder, [q]: { positions, orientation, length: boatLength } }
-      //   return { ...prev, [prev.length]: { positions, orientation, length: boatLength } }
-      // })
-      q++
-    }
-    // setEnemyBoatPlacements(boatPlacementsHolder)
-    return targets
-  }
+  const [cookies, setCookie, removeCookie] = useCookies(['user']);
+  const [socket, setSocket] = useState(null);
+  const [turn, setTurn] = useState(true);
+  const [vsAi, setVsAi] = useState(false)
 
   const [orientation, setOrientation] = useState('h')
   const [boatPlacements, setBoatPlacements] = useState([])
   const [gameProgress, setGameProgress] = useState('placement')
   const [boardState, setBoardState] = useState(generateBoard())
-  const [enemyBoardState, setEnemyBoardState] = useState(generateBoard())
-  const [targets, setTargets] = useState([])
-  const [enemyTargets, setEnemyTargets] = useState()
   const [boats, setBoats] = useState([2, 3, 4, 5])
+  const [targets, setTargets] = useState([])
+
+  const [enemyBoatPlacements, setEnemyBoatPlacements] = useState([])
+  const [enemyBoats, setEnemyBoats] = useState([2, 3, 4, 5])
+  const [enemyBoardState, setEnemyBoardState] = useState(generateBoard())
+  const [enemyTargets, setEnemyTargets] = useState()
+
+
+  useEffect(() => {
+    if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), state: 'matching' })
+    const newSocket = new WebSocket('ws://localhost:8080/ws');
+    newSocket.onmessage = (event) => {
+      let message = JSON.parse(event.data);
+      console.log(message)
+      if (message.turn) {
+        setTurn(false)
+      }
+      if (message.state === 'matched') {
+        setCookie('user', { id: cookies.user.id, state: 'matched' })
+        setGameProgress('placement')
+      } else if (message.state === 'ongoing') {
+        setCookie('user', { id: cookies.user.id, state: 'ongoing' })
+        setGameProgress('ongoing')
+        setEnemyBoatPlacements(message.boatPlacements)
+        setEnemyTargets(Object.values(message.boatPlacements).map(item => item.positions).flat())
+        setTargets(Object.values(boatPlacements).map(i => i.positions).flat())
+      } else if (message.dataType === 'shot') {
+        setTurn(true)
+        let hitOrMiss = (targets).includes(Number(message.index))
+        let state = hitOrMiss ? 'hit' : 'missed'
+        let newState = { ...boardState }
+        newState[message.index] = { id: message.index, state, hover: false }
+        setBoardState(newState)
+        if (hitOrMiss) {
+          const allHits = Object.values(newState).filter((item) => {
+            return item.state === 'hit'
+          }).map((el) => Number(el.id))
+          for (const boat in boatPlacements) {
+            if (!boatPlacements[boat].sunk && boatPlacements[boat].positions.every((b) => allHits.includes(b))) {
+              setBoatPlacements(prev => {
+                prev[boat].sunk = true
+                return { ...prev }
+              })
+              alert(`${boatPlacements[boat].name} was sunk!`)
+            }
+          }
+          if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4) console.log('You Lose!')
+
+          alert('you got HIT!')
+        }
+      }
+    };
+
+    setSocket(newSocket);
+    return () => {
+      if (newSocket.readyState === WebSocket.OPEN) {
+        newSocket.close();
+      }
+    };
+  }, [targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements])
+
+
+
+  const { generateTargets } = useAi()
+
+  const setInformation = (e) => {
+    e.preventDefault()
+    console.log(Object.values(e.target))
+    let data = Object.values(e.target).filter(i => i.name).map(item => item.value)
+    console.log(data)
+    let yourBoats = boatPlacements
+    for (const boat in yourBoats) {
+      yourBoats[boat].name =
+    }
+  }
 
   return (
     <div className="App">
+      <button onClick={() => {
+        console.log(cookies)
+        setVsAi(false)
+        socket.send(JSON.stringify({ ...cookies.user }))
+      }}>find game</button>
+      <button onClick={() => {
+        setVsAi(true)
+        setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
+      }}>play Ai</button>
       <div style={{ marginTop: '30px', marginBottom: '30px' }}>WELCOME TO BATTLESHIP</div>
-      <button onClick={() => { setEnemyTargets(generateTargets()) }}>start game</button>
+
       <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
         <div>
+
+        </div>
+        {(cookies?.user?.state === 'matched' || vsAi || cookies?.user?.state === 'ongoing') ? <>
           <button onClick={() => { orientation === 'v' ? setOrientation('h') : setOrientation('v') }}>
             change boat orientation
           </button>
-          <button onClick={() => {
-            let newBoats = [...boats]
-            newBoats.unshift(boatPlacements[boatPlacements.length - 1].length)
-            setBoatPlacements(prev => prev.slice(0, prev.length - 1))
-            setBoats(newBoats)
-          }}>
-            unplace the last boat
-          </button>
-        </div>
-        <Board board={generateBoard()} player={'player'} boardState={boardState}
-          setBoardState={setBoardState} enemyTargets={enemyTargets}
-          enemyBoardState={enemyBoardState} boatPlacements={boatPlacements}
-          setBoatPlacements={setBoatPlacements} boats={boats} setBoats={setBoats}
-          orientation={orientation} gameProgress={gameProgress} setGameProgress={setGameProgress}
-          targets={targets} setTargets={setTargets} />
-        <Board player={'ai'} enemyBoardState={enemyBoardState}
-          setEnemyBoardState={setEnemyBoardState} boardState={boardState} setBoardState={setBoardState}
-          gameProgress={gameProgress} setGameProgress={setGameProgress}
-          targets={targets} setTargets={setTargets}
-          enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets} />
+          <Board board={generateBoard()} player={'player'} socket={socket} cookies={cookies}
+            boardState={boardState} setBoardState={setBoardState} enemyTargets={enemyTargets}
+            enemyBoardState={enemyBoardState} boatPlacements={boatPlacements}
+            setBoatPlacements={setBoatPlacements} boats={boats} setBoats={setBoats}
+            orientation={orientation} gameProgress={gameProgress} setGameProgress={setGameProgress}
+            targets={targets} setTargets={setTargets} vsAi={vsAi} />
+          <Board player={'ai'} enemyBoardState={enemyBoardState} socket={socket} cookies={cookies}
+            setEnemyBoardState={setEnemyBoardState} boardState={boardState} setBoardState={setBoardState}
+            gameProgress={gameProgress} setGameProgress={setGameProgress}
+            enemyBoatPlacements={enemyBoatPlacements} boats={boats}
+            setEnemyBoatPlacement={setEnemyBoatPlacements}
+            targets={targets} setTargets={setTargets}
+            turn={turn} setTurn={setTurn}
+            enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets}
+            enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
+            vsAi={vsAi} />
+        </> : <>
+          <form onSubmit={(e) => setInformation(e)}>
+            <label for='name'>name</label>
+            <input name='name' />
+            <label for='boat1'>destroyer</label>
+            <input name='boat1' />
+            <label for='boat2'>cruiser</label>
+            <input name='boat2' />
+            <label for='boat3'>battleship</label>
+            <input name='boat3' />
+            <label for='boat4'>carrier</label>
+            <input name='boat4' />
+            <button>submit</button>
+          </form>
+        </>}
       </div>
     </div>
   );
