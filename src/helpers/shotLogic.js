@@ -12,7 +12,6 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
             if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
                 setEnemyBoatPlacement(prev => {
                     prev[boat].sunk = true
-                    if (Object.values(enemyBoatPlacements).filter((i) => i.sunk).length === 4) alert('you WIN!')
                     return { ...prev }
                 })
                 alert(`${enemyBoatPlacements[boat].name} was sunk!`)
@@ -24,3 +23,4 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
     playerOrAiCallback()
 }
 export default shotLogic
+

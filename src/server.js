@@ -6,34 +6,38 @@ const groups = {}
 const wscodes = {}
 const ready = []
 let boats = {}
+let names = {}
 
-const findGroup = (groups, id) => {
+const findGroup = (groups, id, name) => {
     for (const group in groups) {
         if (!groups[group]) {
+            names[id] = name
             groups[group] = id
             groups[id] = group
-            let matched = JSON.stringify({ state: 'matched' })
-            wscodes[id].send(matched)
-            wscodes[group].send(matched)
+            wscodes[id].send(JSON.stringify({ state: 'matched', name: names[group] }))
+            wscodes[group].send(JSON.stringify({ state: 'matched', name: names[id] }))
             return
         }
     }
+    names[id] = name
     groups[id] = null
     wscodes[id].send(JSON.stringify({ turn: true }))
 }
 // When a new websocket connection is established
 wss.on('connection', (ws, req) => {
 
-
     ws.on('message', (message) => {
 
         message = JSON.parse(message)
-        console.log({ same: wscodes[message?.id] === ws })
-        console.log({ message })
+        // console.log({ groups })
         if (message?.id) wscodes[message?.id] = ws
         if (message?.id) wscodes[message?.id] = ws
 
+        if (message.hello === 'hello') {
+            return
+        }
         if (message.dataType === 'shot') {
+
             wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index }))
             return
         }
@@ -41,7 +45,7 @@ wss.on('connection', (ws, req) => {
         if (message.state === 'matching') {
             if (Object.keys(groups).includes(message.id)) return
             else {
-                findGroup(groups, message.id)
+                findGroup(groups, message.id, message.name)
             }
         } else if (message.state === 'matched') {
             boats[message.id] = message.boatPlacements
