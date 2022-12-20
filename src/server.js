@@ -29,11 +29,15 @@ wss.on('connection', (ws, req) => {
     ws.on('message', (message) => {
 
         message = JSON.parse(message)
-        // console.log({ groups })
+        console.log({ groups })
         if (message?.id) wscodes[message?.id] = ws
         if (message?.id) wscodes[message?.id] = ws
-
-        if (message.hello === 'hello') {
+        console.log(message)
+        if (message.turnOrder) {
+            return
+        }
+        if (message.forfeit) {
+            wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forefeit' }))
             return
         }
         if (message.dataType === 'shot') {

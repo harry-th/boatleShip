@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import Board from './Board'
-import { useAi } from './useAi';
+import Board from './components/Board'
+import { useAi } from './helpers/useAi';
 import { useCookies } from 'react-cookie';
 import generateBoard from './helpers/generateBoard';
 var randomstring = require("randomstring");
 
 function App() {
+
 
   const [cookies, setCookie, removeCookie] = useCookies(['user']);
   const [socket, setSocket] = useState(null);
@@ -27,13 +28,17 @@ function App() {
   const [enemyTargets, setEnemyTargets] = useState(sessionStorage.getItem('enemyTargets') ? JSON.parse(sessionStorage.getItem('enemyTargets')) : null)
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
 
+
   useEffect(() => {
+    if (cookies && cookies?.user?.state === 'ongoing') {
+      setBoats([])
+    }
     sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
     sessionStorage.setItem('boatPlacements', JSON.stringify(boatPlacements))
     sessionStorage.setItem('boardState', JSON.stringify(boardState))
     sessionStorage.setItem('enemyTargets', JSON.stringify(enemyTargets))
     sessionStorage.setItem('targets', JSON.stringify(targets))
-    sessionStorage.setItem('boats', JSON.stringify([]))
+    sessionStorage.setItem('boats', JSON.stringify(boats))
     if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4 && gameProgress === 'ongoing') {
       setCookie('user', { ...cookies.user, state: 'gameover' })
       setGameProgress('losing screen')
@@ -42,7 +47,23 @@ function App() {
       setCookie('user', { ...cookies.user, state: 'gameover' })
       setGameProgress('winning screen')
     }
-  }, [gameProgress, enemyBoardState, boatPlacements, enemyBoatPlacements, boardState, enemyTargets, targets, cookies, setCookie])
+    const handleChangeStorage = () => {
+      console.log('storage')
+      socket.send(JSON.stringify({ id: cookies.user.id, forfeit: true }))
+      sessionStorage.removeItem('enemyBoardState')
+      sessionStorage.removeItem('boatPlacements')
+      sessionStorage.removeItem('boardState')
+      sessionStorage.removeItem('enemyTargets')
+      sessionStorage.removeItem('targets')
+      sessionStorage.removeItem('boats')
+      setCookie('user', { ...cookies.user, state: 'gameover' })
+      setGameProgress('losing screen')
+    }
+    window.addEventListener('storage', handleChangeStorage)
+    return () => {
+      window.removeEventListener('storage', handleChangeStorage)
+    }
+  }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boardState, boats, enemyTargets, targets, cookies, setCookie])
 
 
   useEffect(() => {
@@ -54,6 +75,10 @@ function App() {
       if (message.turn) {
         setTurn(false)
         sessionStorage.setItem('turn', JSON.stringify(false))
+      }
+      if (message.dataType === 'forefeit') {
+        setCookie('user', { ...cookies.user, state: 'gameover' })
+        setGameProgress('winning screen')
       }
       if (message.state === 'matched') {
         setEnemyName(message.name)
@@ -99,7 +124,7 @@ function App() {
       }
     };
     newSocket.onopen = () => {
-      if (!turn) newSocket.send(JSON.stringify({ id: cookies.user.id, hello: 'hello' }))
+      if (!turn) newSocket.send(JSON.stringify({ id: cookies.user.id, turnOrder: true }))
     }
     setSocket(newSocket);
     return () => {

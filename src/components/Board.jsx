@@ -1,8 +1,8 @@
 import React from 'react'
-import styles from './styles/Board.module.css'
-import { useAi } from './useAi'
-import shotLogic from './helpers/shotLogic'
-import boardHover from './helpers/boardHover'
+import styles from '../styles/Board.module.css'
+import { useAi } from '../helpers/useAi'
+import shotLogic from '../helpers/shotLogic'
+import boardHover from '../helpers/boardHover'
 import { useEffect } from 'react'
 import { useState } from 'react'
 const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardState, setEnemyBoardState,
