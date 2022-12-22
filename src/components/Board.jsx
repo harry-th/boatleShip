@@ -53,7 +53,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       }
         : () => {
           setTurn(false)
-          // sessionStorage.setItem('turn', JSON.stringify(false))
+          sessionStorage.setItem('turn', JSON.stringify(false))
           socket.send(JSON.stringify({ dataType: 'shot', index, id: cookies.user.id }))
         }
 
@@ -62,8 +62,8 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
         setGameProgress, cookies, setCookie
       )
-      // sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
-      // sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(enemyBoatPlacements))
+      sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
+      sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(enemyBoatPlacements))
     }
   }
 
@@ -91,7 +91,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(cookies, gameProgress, enemyBoatPlacements, boats, turn, boatPlacements, vsAi) }}>print</button>
+      <button onClick={() => { console.log(turn) }}>print</button>
       {(gameProgress === 'YOU WON' || gameProgress === 'YOU LOSE') ? <p>{gameProgress}</p> : ""}
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}

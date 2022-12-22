@@ -30,7 +30,7 @@ wss.on('connection', (ws, req) => {
         message = JSON.parse(message)
         // console.log({ groups })
         if (message?.id) wscodes[message?.id] = ws
-        console.log(message, boats)
+        console.log(message)
         if (message.turnOrder) {
             return
         }
@@ -65,13 +65,13 @@ wss.on('connection', (ws, req) => {
             }
         } else if (message.state === 'matched') {
             console.log('attempt get boats')
-            // if (!ready.includes(message.id)) ready.push(message.id)
-            // console.log(ready.includes(groups[message.id]))
+
             if (Object.keys(boats).includes(groups[message.id])) {
-                // ready.splice(ready.findIndex(item => item === groups[message.id]), 1)
-                // ready.splice(ready.findIndex(item => item === message.id), 1)
+
                 wscodes[message.id].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[groups[message.id]] }))
                 wscodes[groups[message.id]].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[message.id], turn: true }))
+                delete boats[groups[message.id]]
+                delete boats[message.id]
             }
         } else if (message.state === 'ongoing') {
             console.log(message.index)
