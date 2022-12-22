@@ -4,7 +4,6 @@ const wss = new WebSocket.Server({ port: 8080 });
 
 const groups = {}
 const wscodes = {}
-const ready = []
 let boats = {}
 let names = {}
 
@@ -21,7 +20,7 @@ const findGroup = (groups, id, name) => {
     }
     names[id] = name
     groups[id] = null
-    wscodes[id].send(JSON.stringify({ turn: true }))
+    return
 }
 // When a new websocket connection is established
 wss.on('connection', (ws, req) => {
@@ -29,34 +28,50 @@ wss.on('connection', (ws, req) => {
     ws.on('message', (message) => {
 
         message = JSON.parse(message)
-        console.log({ groups })
+        // console.log({ groups })
         if (message?.id) wscodes[message?.id] = ws
-        if (message?.id) wscodes[message?.id] = ws
-        console.log(message)
+        console.log(message, boats)
         if (message.turnOrder) {
             return
         }
+        if (message.win) {
+            if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'win' }))
+            delete groups[message.id]
+            delete groups[groups[message.id]]
+            return
+        }
         if (message.forfeit) {
-            wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forefeit' }))
+            if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forefeit' }))
+            delete groups[message.id]
+            delete groups[groups[message.id]]
+            return
+        }
+        if (message.reset) {
+            delete groups[message.id]
+            delete groups[groups[message.id]]
             return
         }
         if (message.dataType === 'shot') {
-
             wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index }))
             return
         }
-
+        if (message.dataType === 'boats') {
+            boats[message.id] = message.boatPlacements
+        }
         if (message.state === 'matching') {
             if (Object.keys(groups).includes(message.id)) return
             else {
                 findGroup(groups, message.id, message.name)
             }
         } else if (message.state === 'matched') {
-            boats[message.id] = message.boatPlacements
-            if (!ready.includes(message.id)) ready.push(message.id)
-            if (ready.includes(groups[message.id])) {
+            console.log('attempt get boats')
+            // if (!ready.includes(message.id)) ready.push(message.id)
+            // console.log(ready.includes(groups[message.id]))
+            if (Object.keys(boats).includes(groups[message.id])) {
+                // ready.splice(ready.findIndex(item => item === groups[message.id]), 1)
+                // ready.splice(ready.findIndex(item => item === message.id), 1)
                 wscodes[message.id].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[groups[message.id]] }))
-                wscodes[groups[message.id]].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[message.id] }))
+                wscodes[groups[message.id]].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[message.id], turn: true }))
             }
         } else if (message.state === 'ongoing') {
             console.log(message.index)

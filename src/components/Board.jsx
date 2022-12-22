@@ -9,20 +9,6 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
   gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie }) => {
-  const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') ? JSON.parse(sessionStorage.getItem('dataSent')) : false)
-  useEffect(() => {
-    if (!vsAi) {
-      if (Object.keys(boatPlacements).length === 4 && !dataSent) {
-
-        socket.onopen = () => {
-          setDataSent(true)
-          sessionStorage.setItem('dataSent', JSON.stringify(true))
-          socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))
-        }
-      }
-    }
-  }, [vsAi, socket, boatPlacements, cookies, dataSent])
-
 
   let { aiAttack } = useAi()
 
@@ -67,7 +53,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       }
         : () => {
           setTurn(false)
-          sessionStorage.setItem('turn', JSON.stringify(false))
+          // sessionStorage.setItem('turn', JSON.stringify(false))
           socket.send(JSON.stringify({ dataType: 'shot', index, id: cookies.user.id }))
         }
 
@@ -76,8 +62,8 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
         setGameProgress, cookies, setCookie
       )
-      sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
-      sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(enemyBoatPlacements))
+      // sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
+      // sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(enemyBoatPlacements))
     }
   }
 
@@ -85,7 +71,8 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
 
   let element = (index) => {
     let boardClass = player === 'player' ? boardState : enemyBoardState
-    let condition = player === 'ai' ? !boats.length : boats.length
+    let condition = player === 'ai' && gameProgress === 'ongoing' ? true : player === 'player' && gameProgress === 'placement' && boats.length ?
+      true : false
     let interactivity = condition ? 'active' : 'inactive'
     return <div key={index}
       onClick={() => {
@@ -104,7 +91,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(cookies, gameProgress, enemyBoatPlacements) }}>print</button>
+      <button onClick={() => { console.log(cookies, gameProgress, enemyBoatPlacements, boats, turn, boatPlacements, vsAi) }}>print</button>
       {(gameProgress === 'YOU WON' || gameProgress === 'YOU LOSE') ? <p>{gameProgress}</p> : ""}
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
