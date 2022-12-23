@@ -16,7 +16,7 @@ function App() {
 
   const [orientation, setOrientation] = useState('h')
   const [boatPlacements, setBoatPlacements] = useState(sessionStorage.getItem('boatPlacements') ? JSON.parse(sessionStorage.getItem('boatPlacements')) : [])
-  const [gameProgress, setGameProgress] = useState(sessionStorage.getItem('gameProgress') || 'placement')
+  const [gameProgress, setGameProgress] = useState(sessionStorage.getItem('gameProgress') || 'preplacement')
   const [boardState, setBoardState] = useState(sessionStorage.getItem('boardState') ? JSON.parse(sessionStorage.getItem('boardState')) : generateBoard())
   const [boats, setBoats] = useState(sessionStorage.getItem('boats') ? JSON.parse(sessionStorage.getItem('boats')) : [2, 3, 4, 5])
   const [targets, setTargets] = useState(sessionStorage.getItem('targets') ? JSON.parse(sessionStorage.getItem('targets')) : [])
@@ -37,16 +37,17 @@ function App() {
       setTargets([])
       setBoats([2, 3, 4, 5])
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+      // setBoatNames(Object.values(boatPlacements).map(item => item.name))
       setTurn(true)
       setEnemyBoatPlacements([])
-      setGameProgress('placement')
+      setGameProgress('preplacement')
       sessionStorage.removeItem('enemyBoardState')
       sessionStorage.removeItem('boatPlacements')
       sessionStorage.removeItem('boardState')
       sessionStorage.removeItem('enemyTargets')
       sessionStorage.removeItem('targets')
       sessionStorage.removeItem('boats')
-      setCookie('user', { ...cookies.user, state: 'gameover' })
+      // setCookie('user', { ...cookies.user, state: 'gameover' })
     }
     if (cookies && cookies?.user?.state === 'ongoing' && boats.length !== 0) {
       setBoats([])
@@ -60,15 +61,18 @@ function App() {
     if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4 && gameProgress === 'ongoing' && gameProgress !== 'losing screen') {
       reset()
       setGameProgress('losing screen')
+      setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
     }
     if (Object.values(enemyBoatPlacements).filter((i) => i.sunk).length === 4 && gameProgress === 'ongoing' && gameProgress !== 'winning screen') {
       reset()
+      setCookie('user', { ...cookies.user, state: 'gameover', wins: cookies.user.wins + 1 })
       setGameProgress('winning screen')
     }
     const handleChangeStorage = () => {
       console.log('storage')
       socket.send(JSON.stringify({ id: cookies.user.id, forfeit: true }))
       reset()
+      setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
       setGameProgress('losing screen')
     }
     window.addEventListener('storage', handleChangeStorage)
@@ -91,18 +95,20 @@ function App() {
       setTargets([])
       setBoats([2, 3, 4, 5])
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+
+      // setBoatNames(Object.values(boatPlacements).map(item => item.name))
       setTurn(true)
       setEnemyBoatPlacements([])
-      setGameProgress('placement')
+      setGameProgress('preplacement')
       sessionStorage.removeItem('enemyBoardState')
       sessionStorage.removeItem('boatPlacements')
       sessionStorage.removeItem('boardState')
       sessionStorage.removeItem('enemyTargets')
       sessionStorage.removeItem('targets')
       sessionStorage.removeItem('boats')
-      setCookie('user', { ...cookies.user, state: 'gameover' })
+      // setCookie('user', { ...cookies.user,  })
     }
-    if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching' })
+    if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
     const newSocket = new WebSocket('ws://localhost:8080/ws');
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
@@ -113,18 +119,20 @@ function App() {
       }
       if (message.dataType === 'forfeit') {
         reset()
+        setCookie('user', { ...cookies.user, state: 'gameover', wins: cookies.user.wins + 1 })
         setGameProgress('winning screen')
       }
       if (message.dataType === 'win') {
         reset()
+        setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
         setGameProgress('losing screen')
       }
       if (message.state === 'matched') {
         setEnemyName(message.name)
         sessionStorage.setItem('enemyName', message.name)
         setCookie('user', { ...cookies.user, state: 'matched' })
-        // setGameProgress('placement')
-        // sessionStorage.setItem('gameProgress', 'placement')
+        setGameProgress('placement')
+        sessionStorage.setItem('gameProgress', 'placement')
       } else if (message.state === 'ongoing') {
         setCookie('user', { ...cookies.user, state: 'ongoing' })
         setGameProgress('ongoing')
@@ -212,39 +220,43 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={() => {
-        console.log(cookies)
-        setVsAi(false)
-        socket.send(JSON.stringify({ ...cookies.user }))
-      }}>find game</button>
-      <button onClick={() => {
-        setVsAi(true)
-        setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
-      }}>play Ai</button>
-      <button onClick={() => {
-        removeCookie('user')
+      {gameProgress === 'preplacement' && <div>
+        <button onClick={() => {
+          console.log(cookies)
+          setVsAi(false)
+          socket.send(JSON.stringify({ ...cookies.user }))
+        }}>find game</button>
+        <button onClick={() => {
+          setVsAi(true)
+          setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
+        }}>play Ai</button>
+        <button onClick={() => {
+          removeCookie('user')
 
-        sessionStorage.removeItem('enemyBoardState')
-        sessionStorage.removeItem('boatPlacements')
-        sessionStorage.removeItem('enemyBoatPlacements')
-        sessionStorage.removeItem('boardState')
-        sessionStorage.removeItem('enemyTargets')
-        sessionStorage.removeItem('targets')
-        sessionStorage.removeItem('boats')
-        sessionStorage.removeItem('gameProgress')
+          sessionStorage.removeItem('enemyBoardState')
+          sessionStorage.removeItem('boatPlacements')
+          sessionStorage.removeItem('enemyBoatPlacements')
+          sessionStorage.removeItem('boardState')
+          sessionStorage.removeItem('enemyTargets')
+          sessionStorage.removeItem('targets')
+          sessionStorage.removeItem('boats')
+          sessionStorage.removeItem('gameProgress')
 
-        console.log(cookies, turn, boatPlacements)
-        setEnemyBoardState(generateBoard())
-        setEnemyBoatPlacements([])
-        setBoatPlacements([])
-        setBoardState(generateBoard())
-        setEnemyTargets(null)
-        setTargets([])
-        setBoats([2, 3, 4, 5])
-        setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
-        setTurn(true)
+          console.log(cookies, turn, boatPlacements)
+          setEnemyBoardState(generateBoard())
+          setEnemyBoatPlacements([])
+          setBoatPlacements([])
+          setBoardState(generateBoard())
+          setEnemyTargets(null)
+          setTargets([])
+          setBoats([2, 3, 4, 5])
+          setGameProgress('preplacement')
+          setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+          // setBoatNames(Object.values(boatPlacements).map(item => item.name))
+          setTurn(true)
 
-      }}>remove cookie</button>
+        }}>remove cookie</button>
+      </div>}
       <div style={{ marginTop: '30px', marginBottom: '30px' }}>WELCOME TO BATTLESHIP</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
@@ -275,15 +287,15 @@ function App() {
         </> : cookies?.user?.state === 'matching' ? <>
           <form onSubmit={(e) => setInformation(e)}>
             <label htmlFor='name'>name</label>
-            <input name='name' />
+            {cookies.user?.name !== 'noName' ? <p>{cookies.user.name} wins/losses:{cookies.user.wins} / {cookies.user.losses}</p> : <input name='name' />}
             <label htmlFor='boat1'>destroyer</label>
-            <input name='boat1' />
+            <input name='boat1' value={boatNames[0]} />
             <label htmlFor='boat2'>cruiser</label>
-            <input name='boat2' />
+            <input name='boat2' value={boatNames[1]} />
             <label htmlFor='boat3'>battleship</label>
-            <input name='boat3' />
+            <input name='boat3' value={boatNames[2]} />
             <label htmlFor='boat4'>carrier</label>
-            <input name='boat4' />
+            <input name='boat4' value={boatNames[3]} />
             <button>submit</button>
           </form>
         </> : <>
@@ -294,7 +306,7 @@ function App() {
             </header>
             <p>well wasn't that fun! <button onClick={() => {
               setCookie('user', { ...cookies.user, state: 'matching' })
-              setGameProgress('placement')
+              setGameProgress('preplacement')
               socket.send(JSON.stringify({ id: cookies.user.id, reset: true }))
             }}>Back for more?</button></p>
           </div>
