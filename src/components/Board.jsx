@@ -47,7 +47,6 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       })
 
     } else if (turn || vsAi) {
-      console.log('hellllllo')
       let callback = vsAi ? () => {
         aiAttack(boardState, setBoardState, boatPlacements, setBoatPlacements, targets)
       }

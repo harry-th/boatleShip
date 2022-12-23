@@ -29,6 +29,7 @@ function App() {
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
 
   useEffect(() => {
+    console.log('win/ storage refresh')
     const reset = () => {
       setEnemyBoardState(generateBoard())
       setBoatPlacements([])
@@ -36,8 +37,8 @@ function App() {
       setEnemyTargets(null)
       setTargets([])
       setBoats([2, 3, 4, 5])
-      setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
-      // setBoatNames(Object.values(boatPlacements).map(item => item.name))
+      // setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+      setBoatNames(Object.values(boatPlacements).map(item => item.name))
       setTurn(true)
       setEnemyBoatPlacements([])
       setGameProgress('preplacement')
@@ -79,7 +80,7 @@ function App() {
     return () => {
       window.removeEventListener('storage', handleChangeStorage)
     }
-  }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boardState, boats, enemyTargets, targets, cookies, setCookie])
+  }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
 
 
 
@@ -94,9 +95,9 @@ function App() {
       setEnemyTargets(null)
       setTargets([])
       setBoats([2, 3, 4, 5])
-      setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+      // setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
 
-      // setBoatNames(Object.values(boatPlacements).map(item => item.name))
+      setBoatNames(Object.values(boatPlacements).map(item => item.name))
       setTurn(true)
       setEnemyBoatPlacements([])
       setGameProgress('preplacement')
@@ -172,7 +173,7 @@ function App() {
       }
     };
     newSocket.onopen = () => {
-      if (!turn) newSocket.send(JSON.stringify({ id: cookies.user.id, turnOrder: true }))
+      newSocket.send(JSON.stringify({ id: cookies.user.id, turnOrder: true }))
     }
     setSocket(newSocket);
     return () => {
@@ -184,6 +185,7 @@ function App() {
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
   useEffect(() => {
+    console.log('sendboats refresh')
     if (Object.keys(boatPlacements).length === 4 && !dataSent) {
       let sendBoats = (socket) => {
         if (socket.readyState === 1) {
@@ -220,43 +222,43 @@ function App() {
 
   return (
     <div className="App">
-      {gameProgress === 'preplacement' && <div>
-        <button onClick={() => {
-          console.log(cookies)
-          setVsAi(false)
-          socket.send(JSON.stringify({ ...cookies.user }))
-        }}>find game</button>
-        <button onClick={() => {
-          setVsAi(true)
-          setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
-        }}>play Ai</button>
-        <button onClick={() => {
-          removeCookie('user')
+      {/* {gameProgress === 'preplacement' && <div> */}
+      <button onClick={() => {
+        console.log(cookies)
+        setVsAi(false)
+        socket.send(JSON.stringify({ ...cookies.user }))
+      }}>find game</button>
+      <button onClick={() => {
+        setVsAi(true)
+        setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
+      }}>play Ai</button>
+      <button onClick={() => {
+        removeCookie('user')
 
-          sessionStorage.removeItem('enemyBoardState')
-          sessionStorage.removeItem('boatPlacements')
-          sessionStorage.removeItem('enemyBoatPlacements')
-          sessionStorage.removeItem('boardState')
-          sessionStorage.removeItem('enemyTargets')
-          sessionStorage.removeItem('targets')
-          sessionStorage.removeItem('boats')
-          sessionStorage.removeItem('gameProgress')
+        sessionStorage.removeItem('enemyBoardState')
+        sessionStorage.removeItem('boatPlacements')
+        sessionStorage.removeItem('enemyBoatPlacements')
+        sessionStorage.removeItem('boardState')
+        sessionStorage.removeItem('enemyTargets')
+        sessionStorage.removeItem('targets')
+        sessionStorage.removeItem('boats')
+        sessionStorage.removeItem('gameProgress')
 
-          console.log(cookies, turn, boatPlacements)
-          setEnemyBoardState(generateBoard())
-          setEnemyBoatPlacements([])
-          setBoatPlacements([])
-          setBoardState(generateBoard())
-          setEnemyTargets(null)
-          setTargets([])
-          setBoats([2, 3, 4, 5])
-          setGameProgress('preplacement')
-          setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
-          // setBoatNames(Object.values(boatPlacements).map(item => item.name))
-          setTurn(true)
+        console.log(cookies, turn, boatPlacements)
+        setEnemyBoardState(generateBoard())
+        setEnemyBoatPlacements([])
+        setBoatPlacements([])
+        setBoardState(generateBoard())
+        setEnemyTargets(null)
+        setTargets([])
+        setBoats([2, 3, 4, 5])
+        setGameProgress('preplacement')
+        // setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+        setBoatNames(Object.values(boatPlacements).map(item => item.name))
+        setTurn(true)
 
-        }}>remove cookie</button>
-      </div>}
+      }}>remove cookie</button>
+      {/* </div>} */}
       <div style={{ marginTop: '30px', marginBottom: '30px' }}>WELCOME TO BATTLESHIP</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
