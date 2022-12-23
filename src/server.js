@@ -41,7 +41,7 @@ wss.on('connection', (ws, req) => {
             return
         }
         if (message.forfeit) {
-            if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forefeit' }))
+            if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forfeit' }))
             delete groups[message.id]
             delete groups[groups[message.id]]
             return

@@ -38,6 +38,8 @@ function App() {
       setBoats([2, 3, 4, 5])
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
       setTurn(true)
+      setEnemyBoatPlacements([])
+      setGameProgress('placement')
       sessionStorage.removeItem('enemyBoardState')
       sessionStorage.removeItem('boatPlacements')
       sessionStorage.removeItem('boardState')
@@ -52,8 +54,7 @@ function App() {
     sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
     // sessionStorage.setItem('boatPlacements', JSON.stringify(boatPlacements))
     // sessionStorage.setItem('boardState', JSON.stringify(boardState))
-    sessionStorage.setItem('enemyTargets', JSON.stringify(enemyTargets))
-    sessionStorage.setItem('targets', JSON.stringify(targets))
+
     // sessionStorage.setItem('boats', JSON.stringify(boats))
 
     if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4 && gameProgress === 'ongoing' && gameProgress !== 'losing screen') {
@@ -89,8 +90,16 @@ function App() {
       setEnemyTargets(null)
       setTargets([])
       setBoats([2, 3, 4, 5])
-      setTurn(true)
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
+      setTurn(true)
+      setEnemyBoatPlacements([])
+      setGameProgress('placement')
+      sessionStorage.removeItem('enemyBoardState')
+      sessionStorage.removeItem('boatPlacements')
+      sessionStorage.removeItem('boardState')
+      sessionStorage.removeItem('enemyTargets')
+      sessionStorage.removeItem('targets')
+      sessionStorage.removeItem('boats')
       setCookie('user', { ...cookies.user, state: 'gameover' })
     }
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching' })
@@ -102,7 +111,7 @@ function App() {
         setTurn(false)
         sessionStorage.setItem('turn', JSON.stringify(false))
       }
-      if (message.dataType === 'forefeit') {
+      if (message.dataType === 'forfeit') {
         reset()
         setGameProgress('winning screen')
       }
@@ -122,11 +131,12 @@ function App() {
         sessionStorage.setItem('gameProgress', 'ongoing')
         setEnemyBoatPlacements(message.boatPlacements)
         let enemyTargets = Object.values(message.boatPlacements).map(item => item.positions).flat()
-        // let targets = Object.values(boatPlacements).map(i => i.positions).flat()
+        let targets = Object.values(boatPlacements).map(i => i.positions).flat()
         setEnemyTargets(enemyTargets)
         // setTargets(targets)
         sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(message.boatPlacements))
-
+        sessionStorage.setItem('enemyTargets', JSON.stringify(enemyTargets))
+        sessionStorage.setItem('targets', JSON.stringify(targets))
       } else if (message.dataType === 'shot') {
         setTurn(true)
         sessionStorage.setItem('turn', JSON.stringify(true))
@@ -178,15 +188,9 @@ function App() {
         }
       }
       sendBoats(socket)
-      // socket.onopen = () => {
-      //   console.log('hello')
-      //   setDataSent(true)
-      //   socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))
-      // }
+    } else if (cookies?.user?.state === 'gameover') {
+      setDataSent(false)
     }
-    // else if (cookies.user.state === 'gameover') {
-    //   setDataSent(false)
-    // }
   }, [socket, boatPlacements, cookies, dataSent, vsAi])
 
 
@@ -219,7 +223,19 @@ function App() {
       }}>play Ai</button>
       <button onClick={() => {
         removeCookie('user')
+
+        sessionStorage.removeItem('enemyBoardState')
+        sessionStorage.removeItem('boatPlacements')
+        sessionStorage.removeItem('enemyBoatPlacements')
+        sessionStorage.removeItem('boardState')
+        sessionStorage.removeItem('enemyTargets')
+        sessionStorage.removeItem('targets')
+        sessionStorage.removeItem('boats')
+        sessionStorage.removeItem('gameProgress')
+
+        console.log(cookies, turn, boatPlacements)
         setEnemyBoardState(generateBoard())
+        setEnemyBoatPlacements([])
         setBoatPlacements([])
         setBoardState(generateBoard())
         setEnemyTargets(null)
@@ -227,12 +243,7 @@ function App() {
         setBoats([2, 3, 4, 5])
         setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
         setTurn(true)
-        sessionStorage.removeItem('enemyBoardState')
-        sessionStorage.removeItem('boatPlacements')
-        sessionStorage.removeItem('boardState')
-        sessionStorage.removeItem('enemyTargets')
-        sessionStorage.removeItem('targets')
-        sessionStorage.removeItem('boats')
+
       }}>remove cookie</button>
       <div style={{ marginTop: '30px', marginBottom: '30px' }}>WELCOME TO BATTLESHIP</div>
 
