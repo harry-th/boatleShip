@@ -4,7 +4,8 @@ import Board from './components/Board'
 import { useAi } from './helpers/useAi';
 import { useCookies } from 'react-cookie';
 import generateBoard from './helpers/generateBoard';
-var randomstring = require("randomstring");
+let randomstring = require("randomstring");
+const jose = require('jose');
 
 function App() {
 
@@ -22,10 +23,10 @@ function App() {
   const [targets, setTargets] = useState(sessionStorage.getItem('targets') ? JSON.parse(sessionStorage.getItem('targets')) : [])
   const [boatNames, setBoatNames] = useState(['destroyer', 'cruiser', 'battleship', 'carrier'])
 
-  const [enemyBoatPlacements, setEnemyBoatPlacements] = useState(sessionStorage.getItem('enemyBoatPlacements') ? JSON.parse(sessionStorage.getItem('enemyBoatPlacements')) : [])
+  const [enemyBoatPlacements, setEnemyBoatPlacements] = useState([])
   const [enemyBoats, setEnemyBoats] = useState([2, 3, 4, 5])
   const [enemyBoardState, setEnemyBoardState] = useState(sessionStorage.getItem('enemyBoardState') ? JSON.parse(sessionStorage.getItem('enemyBoardState')) : generateBoard())
-  const [enemyTargets, setEnemyTargets] = useState(sessionStorage.getItem('enemyTargets') ? JSON.parse(sessionStorage.getItem('enemyTargets')) : null)
+  const [enemyTargets, setEnemyTargets] = useState(Object.values(enemyBoatPlacements)?.map(item => item.positions).flat() || null)
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
 
   useEffect(() => {
@@ -53,10 +54,42 @@ function App() {
     if (cookies && cookies?.user?.state === 'ongoing' && boats.length !== 0) {
       setBoats([])
     }
+    if (sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing' && Array.isArray(enemyBoatPlacements)) {
+      const getEncryptBoats = async () => {
+        try {
+          const secret = new TextEncoder().encode(
+            process.env.REACT_APP_secret_access_code,
+          )
+          const { payload } = await jose.jwtVerify(sessionStorage.getItem('enemyBoatPlacements'), secret)
+          setEnemyBoatPlacements(payload.enemyBoatPlacements)
+          setEnemyTargets(Object.values(payload.enemyBoatPlacements).map(item => item.positions).flat())
+        } catch (error) {
+          console.log(error)
+        }
+
+      }
+      getEncryptBoats()
+    }
+    if (!sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing') {
+      const setEncryptBoats = async () => {
+        const secret = new TextEncoder().encode(
+          process.env.REACT_APP_secret_access_code,
+        )
+        try {
+          const jwt = await new jose.SignJWT({ enemyBoatPlacements })
+            .setProtectedHeader({ alg: 'HS256' })
+            .sign(secret)
+          sessionStorage.setItem('enemyBoatPlacements', jwt)
+        } catch (error) {
+          console.log(error)
+        }
+      }
+      setEncryptBoats()
+    }
+
     sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
     // sessionStorage.setItem('boatPlacements', JSON.stringify(boatPlacements))
     // sessionStorage.setItem('boardState', JSON.stringify(boardState))
-
     // sessionStorage.setItem('boats', JSON.stringify(boats))
 
     if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4 && gameProgress === 'ongoing' && gameProgress !== 'losing screen') {
@@ -143,9 +176,10 @@ function App() {
         let targets = Object.values(boatPlacements).map(i => i.positions).flat()
         setEnemyTargets(enemyTargets)
         // setTargets(targets)
-        sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(message.boatPlacements))
-        sessionStorage.setItem('enemyTargets', JSON.stringify(enemyTargets))
+        // sessionStorage.setItem('enemyTargets', JSON.stringify(enemyTargets))
         sessionStorage.setItem('targets', JSON.stringify(targets))
+        // sessionStorage.setItem('enemyBoatPlacements', jose.SignJWT(message.boatPlacements).sign(process.env.REACT_APP_secret_access_code))
+
       } else if (message.dataType === 'shot') {
         setTurn(true)
         sessionStorage.setItem('turn', JSON.stringify(true))

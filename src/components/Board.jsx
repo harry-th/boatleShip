@@ -62,7 +62,6 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         setGameProgress, cookies, setCookie
       )
       sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
-      sessionStorage.setItem('enemyBoatPlacements', JSON.stringify(enemyBoatPlacements))
     }
   }
 
@@ -90,7 +89,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(turn, boatPlacements, cookies, gameProgress) }}>print</button>
+      <button onClick={() => { console.log(enemyBoatPlacements, enemyTargets) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>
