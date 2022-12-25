@@ -10,6 +10,9 @@
     background-color: red;
     pointer-events: none;
   }
+  &.missed.green {
+    background-color: green;
+  }
   &.protected {
     background-color: orange;
     pointer-events: none;
@@ -19,7 +22,7 @@
   }
   &.missed {
     background-color: white;
-    pointer-events: none;
+    // pointer-events: none;
   }
   &.mine {
     background-color: black;

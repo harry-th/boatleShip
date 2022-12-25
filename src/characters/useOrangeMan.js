@@ -58,7 +58,6 @@ let useOrangeMan = () => {
                 let hitOrMiss = enemyTargets.includes(openShots[random].id)
                 let state = hitOrMiss ? 'hit' : 'missed'
                 newEnemyBoardState[openShots[random].id] = { id: openShots[random].id, state, hover: false }
-                console.log(openShots[random].id)
                 retaliation.push(openShots[random].id)
                 openShots.splice(random, 1)
                 if (openShots.length === 0) break outerLoop

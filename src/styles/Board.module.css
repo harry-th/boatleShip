@@ -11,6 +11,9 @@
   background-color: red;
   pointer-events: none;
 }
+.square.missed.green {
+  background-color: green;
+}
 .square.protected {
   background-color: orange;
   pointer-events: none;
@@ -20,7 +23,6 @@
 }
 .square.missed {
   background-color: white;
-  pointer-events: none;
 }
 .square.mine {
   background-color: black;

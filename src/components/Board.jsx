@@ -5,17 +5,20 @@ import shotLogic from '../helpers/shotLogic'
 import boardHover from '../helpers/boardHover'
 import placementLogic from '../helpers/placementLogic'
 import cornerMan from '../characters/cornerMan'
+import useLineMan from '../characters/useLineMan'
 const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardState, setEnemyBoardState,
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
-  gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie, character, orangeShot }) => {
+  gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie,
+  character, orangeShot, selecting }) => {
 
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
+  let { shootLine } = useLineMan()
   const checkHit = (index) => {
 
     if (gameProgress === 'placement') {
-      character === 'cornerman' ?
+      character === 'cornerMan' ?
         cornerManPlacement(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
         : placementLogic(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
 
@@ -30,7 +33,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
           else
             socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, }))
         }
-      character === 'cornerman' ?
+      character === 'cornerMan' ?
         cornerShot(callback,
           index, enemyTargets, enemyBoardState,
           setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
@@ -40,12 +43,13 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
             index, enemyTargets, enemyBoardState,
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
             setBoardState
-          ) :
-          shotLogic(callback,
-            index, enemyTargets, enemyBoardState,
-            setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
+          ) : character === 'lineMan' && selecting ?
+            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setEnemyBoardState)
+            : shotLogic(callback,
+              index, enemyTargets, enemyBoardState,
+              setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
 
-          )
+            )
       sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
     }
   }
@@ -62,7 +66,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         checkHit(index)
       }}
       onMouseEnter={() =>
-        character === 'cornerman' ?
+        character === 'cornerMan' ?
           cornerHover(index, gameProgress, boardState, boats, orientation, setBoardState) :
           boardHover(index, gameProgress, boardState, boats, orientation, setBoardState)
       }

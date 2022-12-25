@@ -5,6 +5,7 @@ import { useAi } from './helpers/useAi';
 import { useCookies } from 'react-cookie';
 import generateBoard from './helpers/generateBoard';
 import useOrangeMan from './characters/useOrangeMan';
+import useLineMan from './characters/useLineMan';
 let randomstring = require("randomstring");
 const jose = require('jose');
 
@@ -12,7 +13,7 @@ function App() {
 
   const [character, setCharacter] = useState('none')
   let { bluffing, setBluffing, bluffShots, orangeShot, fireBluffShots } = useOrangeMan()
-
+  let { lastShots, setLastShots, selecting, setSelecting } = useLineMan()
 
   const [cookies, setCookie, removeCookie] = useCookies(['user']);
   const [socket, setSocket] = useState(null);
@@ -202,6 +203,15 @@ function App() {
 
       } else if (message.dataType === 'shot') {
         if (character === 'orangeMan' && bluffing) setBluffing('ready')
+        if (character === 'lineMan') {
+          if (!Array.isArray(message.index)) {
+            setLastShots(prev => {
+              if (prev.length === 2) prev.shift()
+              return [...prev, message.index]
+            })
+          }
+        }
+
         setTurn(true)
         sessionStorage.setItem('turn', JSON.stringify(true))
         if (message.orange) {
@@ -255,7 +265,7 @@ function App() {
         newSocket.close();
       }
     };
-  }, [turn, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements])
+  }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements, setLastShots])
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
   useEffect(() => {
@@ -345,6 +355,10 @@ function App() {
           <button onClick={() => { orientation === 'v' ? setOrientation('h') : setOrientation('v') }}>
             change boat orientation
           </button>
+          <button onClick={() => { setCharacter('orangeMan') }}>orange mode</button>
+          <button onClick={() => { setCharacter('lineMan') }}>line mode</button>
+          <button onClick={() => { setCharacter('cornerMan') }}>corner mode</button>
+
           <Board board={boardState} player={'player'} character={character} socket={socket} cookies={cookies} setCookie={setCookie}
             boardState={boardState} setBoardState={setBoardState} enemyTargets={enemyTargets}
             enemyBoardState={enemyBoardState} boatPlacements={boatPlacements}
@@ -361,20 +375,42 @@ function App() {
             turn={turn} setTurn={setTurn} orangeShot={orangeShot}
             enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets}
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
-            vsAi={vsAi} enemyName={enemyName} />
-          <button onClick={() => { setCharacter('orangeMan') }}>orange mode</button>
-          <button onClick={() => {
-            if (bluffing === null) return
-            if (turn) {
-              if (bluffing !== 'ready') setBluffing(prev => !prev)
-              if (bluffing === 'ready') {
-                setTurn(false)
-                setBluffing(null)
-                fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
+            vsAi={vsAi} enemyName={enemyName} selecting={selecting} />
+          {character === 'orangeMan' && <div>
+            <button onClick={() => {
+              if (bluffing === null) return
+              if (turn) {
+                if (bluffing !== 'ready') setBluffing(prev => !prev)
+                if (bluffing === 'ready') {
+                  setTurn(false)
+                  setBluffing(null)
+                  fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
+                }
               }
-            }
-          }}>{bluffing === 'ready' ? 'fire Retaliation' :
-            bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
+            }}>{bluffing === 'ready' ? 'fire Retaliation' :
+              bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
+          </div>
+          }
+          {character === 'lineMan' && <div>
+            <button onClick={() => {
+              let newState = { ...enemyBoardState }
+              for (const shot of lastShots) {
+                let hitOrMiss = (enemyTargets).includes(Number(shot))
+                let state = hitOrMiss ? 'hit' : 'missed'
+                newState[shot] = { id: shot, state, hover: false }
+              }
+              setEnemyBoardState(newState)
+              socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id }))
+            }}>
+              fireLastShots
+            </button>
+            <button onClick={() => {
+              setSelecting(prev => !prev)
+            }}>
+              makeLine
+            </button>
+          </div>
+          }
         </> : cookies?.user?.state === 'matching' ? <>
           <form onSubmit={(e) => setInformation(e)}>
             <label htmlFor='name'>name</label>
