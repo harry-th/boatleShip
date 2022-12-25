@@ -364,15 +364,17 @@ function App() {
             vsAi={vsAi} enemyName={enemyName} />
           <button onClick={() => { setCharacter('orangeMan') }}>orange mode</button>
           <button onClick={() => {
-            if (bluffing === 'empty') return
+            if (bluffing === null) return
             if (turn) {
               if (bluffing !== 'ready') setBluffing(prev => !prev)
               if (bluffing === 'ready') {
-                setBluffing('empty')
+                setTurn(false)
+                setBluffing(null)
                 fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
               }
             }
-          }}>{bluffing === 'ready' ? 'fire Retaliation' : bluffing === 'empty' ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
+          }}>{bluffing === 'ready' ? 'fire Retaliation' :
+            bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
         </> : cookies?.user?.state === 'matching' ? <>
           <form onSubmit={(e) => setInformation(e)}>
             <label htmlFor='name'>name</label>
