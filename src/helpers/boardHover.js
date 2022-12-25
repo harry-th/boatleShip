@@ -10,7 +10,8 @@ const boardHover = (index, gameProgress, boardState, boats, orientation, setBoar
         }
 
         for (const square in newBoardState) {
-            if (coords.includes(Number(square)) && (orientation === 'v' || ((Math.floor(coords[coords.findIndex((r) => r === square) + 1] / 10) * 10) - (Math.floor(square / 10) * 10) === 0))) {
+            if (coords.includes(Number(square))
+                && (orientation === 'v' || ((Math.floor(coords[coords.findIndex((r) => r === square) + 1] / 10) * 10) - (Math.floor(square / 10) * 10) === 0))) {
                 if (Number(square) < 100) newBoardState[square].hover = 'hover'
             } else if (newBoardState[square].hover === 'hover') {
                 newBoardState[square].hover = false

@@ -3,64 +3,49 @@ import styles from '../styles/Board.module.css'
 import { useAi } from '../helpers/useAi'
 import shotLogic from '../helpers/shotLogic'
 import boardHover from '../helpers/boardHover'
-import { useEffect } from 'react'
-import { useState } from 'react'
+import placementLogic from '../helpers/placementLogic'
+import cornerMan from '../characters/cornerMan'
 const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardState, setEnemyBoardState,
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
-  gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie }) => {
+  gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie, character, orangeShot }) => {
 
   let { aiAttack } = useAi()
-
+  let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
   const checkHit = (index) => {
 
     if (gameProgress === 'placement') {
-
-      let num = [...boats].shift()
-      let boatName = [...boatNames].shift()
-
-      let positions = Array(num).fill().map((item, i) => {
-        return orientation === 'h' ? index + i : index + i * 10
-      })
-      if (positions.some((pos) => targets.includes(pos))) return
-      if (orientation === 'h' && (Math.floor(positions[positions.length - 1] / 10) * 10) - (Math.floor(positions[0] / 10) * 10) > 0) return
-      if (orientation === 'v' && positions[positions.length - 1] > 99) return
-      if (boats.length === 1 && vsAi) {
-        setGameProgress('ongoing')
-      }
-      setTargets(p => [...p, ...positions])
-      setBoatPlacements(prev => {
-        return ({ ...prev, [boatName]: { name: boatName, positions, orientation, length: num } })
-      })
-      let newBoardState = { ...boardState }
-      for (const square in newBoardState) {
-        if (positions.includes(Number(square))) {
-          newBoardState[square].state = 'mine'
-        }
-      }
-      setBoardState(newBoardState)
-      setBoats(prev => {
-        return prev.slice(1, prev.length)
-      })
-      setBoatNames(prev => {
-        return prev.slice(1, prev.length)
-      })
+      character === 'cornerman' ?
+        cornerManPlacement(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
+        : placementLogic(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
 
     } else if (turn || vsAi) {
       let callback = vsAi ? () => {
         aiAttack(boardState, setBoardState, boatPlacements, setBoatPlacements, targets)
       }
-        : () => {
+        : (shot, shotData) => {
           setTurn(false)
           sessionStorage.setItem('turn', JSON.stringify(false))
-          socket.send(JSON.stringify({ dataType: 'shot', index, id: cookies.user.id }))
+          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, ...shotData }))
+          else
+            socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, }))
         }
+      character === 'cornerman' ?
+        cornerShot(callback,
+          index, enemyTargets, enemyBoardState,
+          setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
 
-      shotLogic(callback,
-        index, enemyTargets, enemyBoardState,
-        setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
-        setGameProgress, cookies, setCookie
-      )
+        ) : character === 'orangeMan' ?
+          orangeShot(callback,
+            index, enemyTargets, enemyBoardState,
+            setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
+            setBoardState
+          ) :
+          shotLogic(callback,
+            index, enemyTargets, enemyBoardState,
+            setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
+
+          )
       sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
     }
   }
@@ -76,7 +61,11 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       onClick={() => {
         checkHit(index)
       }}
-      onMouseEnter={() => boardHover(index, gameProgress, boardState, boats, orientation, setBoardState)}
+      onMouseEnter={() =>
+        character === 'cornerman' ?
+          cornerHover(index, gameProgress, boardState, boats, orientation, setBoardState) :
+          boardHover(index, gameProgress, boardState, boats, orientation, setBoardState)
+      }
       className={[styles.square, styles[interactivity],
       boardClass && styles[(boardClass)[index].state],
       boardClass && styles[(boardClass)[index].hover]
@@ -89,7 +78,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(enemyBoatPlacements, enemyTargets) }}>print</button>
+      <button onClick={() => { console.log(boardState) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>

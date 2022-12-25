@@ -52,7 +52,10 @@ wss.on('connection', (ws, req) => {
             return
         }
         if (message.dataType === 'shot') {
-            wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index }))
+            if (message.bluffArray) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, bluffArray: message.bluffArray }))
+            else if (message.orange) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing }))
+            else
+                wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index }))
             return
         }
         if (message.dataType === 'boats') {

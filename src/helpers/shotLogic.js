@@ -20,7 +20,7 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
 
         alert('Nice Shot!')
     }
-    playerOrAiCallback()
+    playerOrAiCallback(index)
 }
 export default shotLogic
 

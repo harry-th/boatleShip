@@ -4,10 +4,14 @@ import Board from './components/Board'
 import { useAi } from './helpers/useAi';
 import { useCookies } from 'react-cookie';
 import generateBoard from './helpers/generateBoard';
+import useOrangeMan from './characters/useOrangeMan';
 let randomstring = require("randomstring");
 const jose = require('jose');
 
 function App() {
+
+  const [character, setCharacter] = useState('none')
+  let { bluffing, setBluffing, bluffShots, orangeShot, fireBluffShots } = useOrangeMan()
 
 
   const [cookies, setCookie, removeCookie] = useCookies(['user']);
@@ -49,10 +53,8 @@ function App() {
       sessionStorage.removeItem('enemyTargets')
       sessionStorage.removeItem('targets')
       sessionStorage.removeItem('boats')
+      sessionStorage.removeItem('turn')
       // setCookie('user', { ...cookies.user, state: 'gameover' })
-    }
-    if (cookies && cookies?.user?.state === 'ongoing' && boats.length !== 0) {
-      setBoats([])
     }
     if (sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing' && Array.isArray(enemyBoatPlacements)) {
       const getEncryptBoats = async () => {
@@ -88,7 +90,7 @@ function App() {
     }
 
     sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
-    // sessionStorage.setItem('boatPlacements', JSON.stringify(boatPlacements))
+    sessionStorage.setItem('boatPlacements', JSON.stringify(boatPlacements))
     // sessionStorage.setItem('boardState', JSON.stringify(boardState))
     // sessionStorage.setItem('boats', JSON.stringify(boats))
 
@@ -140,6 +142,8 @@ function App() {
       sessionStorage.removeItem('enemyTargets')
       sessionStorage.removeItem('targets')
       sessionStorage.removeItem('boats')
+      sessionStorage.removeItem('turn')
+
       // setCookie('user', { ...cookies.user,  })
     }
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
@@ -161,6 +165,22 @@ function App() {
         setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
         setGameProgress('losing screen')
       }
+      if (message.bluffArray) {
+        console.log(message.bluffArray)
+        let newBoardState = { ...boardState }
+        let newBoatPlacements = { ...boatPlacements }
+        for (const bluff of message.bluffArray) {
+          if (newBoardState[bluff].state === 'hit') newBoardState[bluff].state = 'mine'
+          else
+            newBoardState[bluff].state = null
+
+          for (const boat in boatPlacements) {
+            if (boatPlacements[boat].positions.includes(bluff) && boatPlacements[boat].sunk) newBoatPlacements[boat].sunk = false
+          }
+        }
+        setBoardState(newBoardState)
+        setBoatPlacements(newBoatPlacements)
+      }
       if (message.state === 'matched') {
         setEnemyName(message.name)
         sessionStorage.setItem('enemyName', message.name)
@@ -181,13 +201,33 @@ function App() {
         // sessionStorage.setItem('enemyBoatPlacements', jose.SignJWT(message.boatPlacements).sign(process.env.REACT_APP_secret_access_code))
 
       } else if (message.dataType === 'shot') {
+        if (character === 'orangeMan' && bluffing) setBluffing('ready')
         setTurn(true)
         sessionStorage.setItem('turn', JSON.stringify(true))
-        let hitOrMiss = (targets).includes(Number(message.index))
-        let state = hitOrMiss ? 'hit' : 'missed'
+        if (message.orange) {
+          setEnemyBoardState(prev => {
+            let oldProtected = Object.values(prev).findIndex(i => i.state === 'protected')
+            if (prev[oldProtected]?.state) prev[oldProtected].state = null
+            prev[message.index].state = 'protected'
+            return prev
+          })
+        }
         let newState = { ...boardState }
-        newState[message.index] = { id: message.index, state, hover: false }
-        setBoardState(newState)
+        let hitOrMiss
+        if (Array.isArray(message.index)) {
+          for (const ind of message.index) {
+            let hitOrMisses = (targets).includes(Number(ind))
+            if (hitOrMisses) hitOrMiss = true
+            let state = hitOrMisses ? 'hit' : 'missed'
+            newState[ind] = { id: ind, state, hover: false }
+            setBoardState(newState)
+          }
+        } else {
+          hitOrMiss = (targets).includes(Number(message.index))
+          let state = hitOrMiss ? 'hit' : 'missed'
+          newState[message.index] = { id: message.index, state, hover: false }
+          setBoardState(newState)
+        }
         sessionStorage.setItem('boardState', JSON.stringify(newState))
         if (hitOrMiss) {
           const allHits = Object.values(newState).filter((item) => {
@@ -222,7 +262,7 @@ function App() {
     console.log('sendboats refresh')
     if (Object.keys(boatPlacements).length === 4 && !dataSent) {
       let sendBoats = (socket) => {
-        if (socket.readyState === 1) {
+        if (socket?.readyState === 1) {
           setDataSent(true)
           socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))
         } else {
@@ -277,6 +317,8 @@ function App() {
         sessionStorage.removeItem('targets')
         sessionStorage.removeItem('boats')
         sessionStorage.removeItem('gameProgress')
+        sessionStorage.removeItem('turn')
+
 
         console.log(cookies, turn, boatPlacements)
         setEnemyBoardState(generateBoard())
@@ -303,23 +345,34 @@ function App() {
           <button onClick={() => { orientation === 'v' ? setOrientation('h') : setOrientation('v') }}>
             change boat orientation
           </button>
-          <Board board={boardState} player={'player'} socket={socket} cookies={cookies} setCookie={setCookie}
+          <Board board={boardState} player={'player'} character={character} socket={socket} cookies={cookies} setCookie={setCookie}
             boardState={boardState} setBoardState={setBoardState} enemyTargets={enemyTargets}
             enemyBoardState={enemyBoardState} boatPlacements={boatPlacements}
             setBoatPlacements={setBoatPlacements} boats={boats} setBoats={setBoats}
             orientation={orientation} gameProgress={gameProgress} setGameProgress={setGameProgress}
             targets={targets} setTargets={setTargets} vsAi={vsAi} boatNames={boatNames}
             setBoatNames={setBoatNames} />
-          <Board player={'ai'} enemyBoardState={enemyBoardState} socket={socket} cookies={cookies}
+          <Board player={'ai'} character={character} enemyBoardState={enemyBoardState} socket={socket} cookies={cookies}
             setCookie={setCookie} setEnemyBoardState={setEnemyBoardState} boardState={boardState}
             setBoardState={setBoardState} gameProgress={gameProgress} setGameProgress={setGameProgress}
             enemyBoatPlacements={enemyBoatPlacements} boats={boats}
             setEnemyBoatPlacement={setEnemyBoatPlacements}
             targets={targets} setTargets={setTargets}
-            turn={turn} setTurn={setTurn}
+            turn={turn} setTurn={setTurn} orangeShot={orangeShot}
             enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets}
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} />
+          <button onClick={() => { setCharacter('orangeMan') }}>orange mode</button>
+          <button onClick={() => {
+            if (bluffing === 'empty') return
+            if (turn) {
+              if (bluffing !== 'ready') setBluffing(prev => !prev)
+              if (bluffing === 'ready') {
+                setBluffing('empty')
+                fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
+              }
+            }
+          }}>{bluffing === 'ready' ? 'fire Retaliation' : bluffing === 'empty' ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
         </> : cookies?.user?.state === 'matching' ? <>
           <form onSubmit={(e) => setInformation(e)}>
             <label htmlFor='name'>name</label>
@@ -346,6 +399,7 @@ function App() {
               socket.send(JSON.stringify({ id: cookies.user.id, reset: true }))
             }}>Back for more?</button></p>
           </div>
+
         </>}
       </div>
     </div>

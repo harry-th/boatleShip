@@ -11,6 +11,13 @@
   background-color: red;
   pointer-events: none;
 }
+.square.protected {
+  background-color: orange;
+  pointer-events: none;
+}
+.square.protected.mine {
+  background-color: orange;
+}
 .square.missed {
   background-color: white;
   pointer-events: none;
