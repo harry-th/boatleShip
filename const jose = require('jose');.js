@@ -6,6 +6,7 @@ let otherStuff = () => {
         const secret = new TextEncoder().encode(
             process.env.SECRET_ACCESS_TOKEN,
         )
+        console.log({ secret })
         console.log(process.env.REACT_APP_secret_access_code)
 
         const jwt = await new jose.SignJWT({ 'hello': true })

@@ -7,7 +7,10 @@ let cornerMan = () => {
             return orientation === 'h' ? index + i : index + i * 10
         })
         if (positions.some((pos) => targets.includes(pos))) return
-        if (positions[positions.length - 1] > 99) return
+        for (let i = 0; i < positions.length; i++) {
+            if (positions[i] > 100) positions[i] = positions[i] - 99
+        }
+        console.log(positions)
         // if (orientation === 'h' && (Math.floor(positions[positions.length - 1] / 10) * 10) - (Math.floor(positions[0] / 10) * 10) > 0) return
         // if (orientation === 'v' && positions[positions.length - 1] > 99) return
         if (boats.length === 1 && vsAi) {
@@ -72,17 +75,18 @@ let cornerMan = () => {
             for (let i = 0; i < boats[0]; i++) {
                 coords.push(orientation === 'h' ? index + i : index + i * 10)
             }
+            for (let i = 0; i < coords.length; i++) {
+                if (coords[i] > 99) coords[i] = coords[i] - 99
+            }
+            console.log(coords)
             let newBoardState = { ...boardState }
             for (let i = 0; i < coords.length; i++) {
                 if (boardState[coords[i]]?.state === 'mine') return
             }
 
             for (const square in newBoardState) {
-                if (coords.includes(Number(square))
-                    // && (orientation === 'v' 
-                    // || ((Math.floor(coords[coords.findIndex((r) => r === square) + 1] / 10) * 10) - (Math.floor(square / 10) * 10) === 0))
-                ) {
-                    if (Number(square) < 100) newBoardState[square].hover = 'hover'
+                if (coords.includes(Number(square))) {
+                    newBoardState[square].hover = 'hover'
                 } else if (newBoardState[square].hover === 'hover') {
                     newBoardState[square].hover = false
                 }

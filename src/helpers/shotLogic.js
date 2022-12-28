@@ -1,5 +1,4 @@
 let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement) => {
-    if (enemyBoardState[index] === 'missed') return
     let hitOrMiss = enemyTargets.includes(index)
     let state = hitOrMiss ? 'hit' : 'missed'
     let newState = { ...enemyBoardState }

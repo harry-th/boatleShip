@@ -10,7 +10,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
   gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie,
-  character, orangeShot, selecting }) => {
+  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber }) => {
 
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
@@ -27,11 +27,17 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         aiAttack(boardState, setBoardState, boatPlacements, setBoatPlacements, targets)
       }
         : (shot, shotData) => {
-          setTurn(false)
+          let freeShot
+          if (enemyBoardState[shot] === 'missed') return
+          if (turnNumber !== 3) setTurn(false)
+          if (turnNumber === 3) {
+            setTurnNumber(0)
+            freeShot = true
+          }
           sessionStorage.setItem('turn', JSON.stringify(false))
-          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, ...shotData }))
+          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, ...shotData, freeShot }))
           else
-            socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, }))
+            socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot }))
         }
       character === 'cornerMan' ?
         cornerShot(callback,
@@ -44,7 +50,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
             setBoardState
           ) : character === 'lineMan' && selecting ?
-            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setEnemyBoardState)
+            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting)
             : shotLogic(callback,
               index, enemyTargets, enemyBoardState,
               setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
@@ -63,7 +69,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
     let interactivity = condition ? 'active' : 'inactive'
     return <div key={index}
       onClick={() => {
-        checkHit(index)
+        if (boardClass[index].state === null || boardClass[index].state === 'selectable') checkHit(index)
       }}
       onMouseEnter={() =>
         character === 'cornerMan' ?
@@ -82,7 +88,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(boardState) }}>print</button>
+      <button onClick={() => { console.log(turnNumber, turn) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>

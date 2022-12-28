@@ -3,16 +3,9 @@ import { useState } from "react"
 const useLineMan = () => {
     const [lastShots, setLastShots] = useState([])
     const [selection, setSelection] = useState([])
-    const [selecting, setSelecting] = useState(false)
-    const addLastShots = (index) => {
-        if (Array.isArray(index)) return
-        else
-            setLastShots(prev => {
-                if (prev.length === 2) prev.shift()
-                return [...prev, index]
-            })
-    }
-    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setEnemyBoardState) => {
+    const [selecting, setSelecting] = useState(sessionStorage.getItem('selecting') ? JSON.parse(sessionStorage.getItem('selecting')) : false)
+
+    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting) => {
         if (selection[0] === index) {
             setSelection([])
             setEnemyBoardState(prev => {
@@ -21,9 +14,10 @@ const useLineMan = () => {
             })
             return
         }
-        if (enemyBoardState[index].state !== 'missed') return
+        if (enemyBoardState[index].state !== 'selectable') return
         if (selection.length === 0) {
             setSelection([index])
+            sessionStorage.setItem('selection', index)
             setEnemyBoardState(prev => {
                 prev[index].hover = 'green'
                 return prev
@@ -43,12 +37,34 @@ const useLineMan = () => {
                     end = index
                 }
                 for (let i = start + 1; i < end; i++) {
-                    console.log(i)
 
-                    if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected') {
-                        console.log('failed')
-
-                        return
+                    if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected' ||
+                        enemyBoardState[i].state === 'selectable' || enemyBoardState[i].state === 'hit' || enemyBoardState[i].hover === 'protected') {
+                        if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected') {
+                            let oldState = boardState[i].state
+                            console.log(i, 'this')
+                            setBoardState(prev => {
+                                console.log(prev[i])
+                                prev[i].state = 'hit'
+                                return { ...prev }
+                            })
+                            setTimeout(() => setBoardState(prev => {
+                                prev[i].state = oldState
+                                return { ...prev }
+                            }), 200)
+                            return
+                        } else if (enemyBoardState[i].state === 'selectable' || enemyBoardState[i].state === 'hit' || enemyBoardState[i].hover === 'protected') {
+                            let oldState = enemyBoardState[i].state
+                            setEnemyBoardState(prev => {
+                                prev[i].state = 'hit'
+                                return prev
+                            })
+                            setTimeout(() => setEnemyBoardState(prev => {
+                                prev[i].state = oldState
+                                return prev
+                            }), 200)
+                            return
+                        }
                     } else {
                         result.push(i)
                     }
@@ -62,9 +78,35 @@ const useLineMan = () => {
                     start = selection[0]
                     end = index
                 }
-                for (let i = start; i < end; i += 10) {
-                    if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected') {
-                        return
+                for (let i = start + 10; i < end; i += 10) {
+                    console.log(i)
+                    if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected' ||
+                        enemyBoardState[i].state === 'selectable' || enemyBoardState[i].state === 'hit' || enemyBoardState[i].hover === 'protected') {
+                        if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected') {
+                            let oldState = boardState[i].state
+                            console.log(i, 'this')
+                            setBoardState(prev => {
+                                console.log(prev[i])
+                                prev[i].state = 'hit'
+                                return { ...prev }
+                            })
+                            setTimeout(() => setBoardState(prev => {
+                                prev[i].state = oldState
+                                return { ...prev }
+                            }), 200)
+                            return
+                        } else if (enemyBoardState[i].state === 'selectable' || enemyBoardState[i].state === 'hit' || enemyBoardState[i].hover === 'protected') {
+                            let oldState = enemyBoardState[i].state
+                            setEnemyBoardState(prev => {
+                                prev[i].state = 'hit'
+                                return prev
+                            })
+                            setTimeout(() => setEnemyBoardState(prev => {
+                                prev[i].state = oldState
+                                return prev
+                            }), 200)
+                            return
+                        }
                     } else {
                         result.push(i)
                     }
@@ -78,14 +120,22 @@ const useLineMan = () => {
                 return prev
             })
             setSelection([])
+
             let newEnemyBoardState = { ...enemyBoardState }
             for (const item of result) {
                 let hitOrMiss = enemyTargets.includes(item)
                 let state = hitOrMiss ? 'hit' : 'missed'
                 newEnemyBoardState[item] = { id: item, state, hover: false }
             }
+            for (const square in enemyBoardState) {
+                if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'
+            }
             setEnemyBoardState(newEnemyBoardState)
             socket.send(JSON.stringify({ dataType: 'shot', index: result, id: cookies.user.id }))
+            setSelecting(false)
+            sessionStorage.setItem('selecting', false)
+            setTurn(false)
+            sessionStorage.setItem('turn', JSON.stringify(false))
         }
     }
     return { lastShots, setLastShots, shootLine, selecting, setSelecting }

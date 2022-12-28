@@ -11,7 +11,7 @@ const jose = require('jose');
 
 function App() {
 
-  const [character, setCharacter] = useState('none')
+  const [character, setCharacter] = useState(sessionStorage.getItem('character') || 'none')
   let { bluffing, setBluffing, bluffShots, orangeShot, fireBluffShots } = useOrangeMan()
   let { lastShots, setLastShots, selecting, setSelecting } = useLineMan()
 
@@ -27,12 +27,15 @@ function App() {
   const [boats, setBoats] = useState(sessionStorage.getItem('boats') ? JSON.parse(sessionStorage.getItem('boats')) : [2, 3, 4, 5])
   const [targets, setTargets] = useState(sessionStorage.getItem('targets') ? JSON.parse(sessionStorage.getItem('targets')) : [])
   const [boatNames, setBoatNames] = useState(['destroyer', 'cruiser', 'battleship', 'carrier'])
+  const [turnNumber, setTurnNumber] = useState(0)
 
   const [enemyBoatPlacements, setEnemyBoatPlacements] = useState([])
   const [enemyBoats, setEnemyBoats] = useState([2, 3, 4, 5])
   const [enemyBoardState, setEnemyBoardState] = useState(sessionStorage.getItem('enemyBoardState') ? JSON.parse(sessionStorage.getItem('enemyBoardState')) : generateBoard())
   const [enemyTargets, setEnemyTargets] = useState(Object.values(enemyBoatPlacements)?.map(item => item.positions).flat() || null)
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
+
+  const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
 
   useEffect(() => {
     console.log('win/ storage refresh')
@@ -48,6 +51,8 @@ function App() {
       setTurn(true)
       setEnemyBoatPlacements([])
       setGameProgress('preplacement')
+      setBluffing(false)
+      setSelecting(false)
       sessionStorage.removeItem('enemyBoardState')
       sessionStorage.removeItem('boatPlacements')
       sessionStorage.removeItem('boardState')
@@ -55,6 +60,8 @@ function App() {
       sessionStorage.removeItem('targets')
       sessionStorage.removeItem('boats')
       sessionStorage.removeItem('turn')
+      sessionStorage.removeItem('bluffing')
+      sessionStorage.removeItem('selecting')
       // setCookie('user', { ...cookies.user, state: 'gameover' })
     }
     if (sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing' && Array.isArray(enemyBoatPlacements)) {
@@ -63,7 +70,8 @@ function App() {
           const secret = new TextEncoder().encode(
             process.env.REACT_APP_secret_access_code,
           )
-          const { payload } = await jose.jwtVerify(sessionStorage.getItem('enemyBoatPlacements'), secret)
+          let cryptoBoatPlacements = sessionStorage.getItem('enemyBoatPlacements')
+          const { payload } = await jose.jwtVerify(cryptoBoatPlacements, secret)
           setEnemyBoatPlacements(payload.enemyBoatPlacements)
           setEnemyTargets(Object.values(payload.enemyBoatPlacements).map(item => item.positions).flat())
         } catch (error) {
@@ -93,6 +101,7 @@ function App() {
     sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
     sessionStorage.setItem('boatPlacements', JSON.stringify(boatPlacements))
     // sessionStorage.setItem('boardState', JSON.stringify(boardState))
+    // sessionStorage.setItem('gameProgress', JSON.stringify(gameProgress))
     // sessionStorage.setItem('boats', JSON.stringify(boats))
 
     if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4 && gameProgress === 'ongoing' && gameProgress !== 'losing screen') {
@@ -116,7 +125,7 @@ function App() {
     return () => {
       window.removeEventListener('storage', handleChangeStorage)
     }
-  }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
+  }, [gameProgress, socket, enemyBoardState, setBluffing, setSelecting, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
 
 
 
@@ -154,6 +163,7 @@ function App() {
       console.log(message)
       if (message.turn) {
         setTurn(false)
+        setTurnNumber(prev => prev + 1)
         sessionStorage.setItem('turn', JSON.stringify(false))
       }
       if (message.dataType === 'forfeit') {
@@ -212,12 +222,16 @@ function App() {
           }
         }
 
-        setTurn(true)
-        sessionStorage.setItem('turn', JSON.stringify(true))
+        if (!message.freeShot) {
+          setTurn(true)
+          sessionStorage.setItem('turn', JSON.stringify(true))
+          setTurnNumber(prev => prev + 1)
+        }
         if (message.orange) {
           setEnemyBoardState(prev => {
             let oldProtected = Object.values(prev).findIndex(i => i.state === 'protected')
-            if (prev[oldProtected]?.state) prev[oldProtected].state = null
+            if (prev[oldProtected]?.state) prev[oldProtected].state = prev[oldProtected].oldState
+            prev[message.index].oldState = prev[message.index].state
             prev[message.index].state = 'protected'
             return prev
           })
@@ -267,7 +281,6 @@ function App() {
     };
   }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements, setLastShots])
 
-  const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
   useEffect(() => {
     console.log('sendboats refresh')
     if (Object.keys(boatPlacements).length === 4 && !dataSent) {
@@ -319,29 +332,31 @@ function App() {
       <button onClick={() => {
         removeCookie('user')
 
-        sessionStorage.removeItem('enemyBoardState')
-        sessionStorage.removeItem('boatPlacements')
-        sessionStorage.removeItem('enemyBoatPlacements')
-        sessionStorage.removeItem('boardState')
-        sessionStorage.removeItem('enemyTargets')
-        sessionStorage.removeItem('targets')
-        sessionStorage.removeItem('boats')
-        sessionStorage.removeItem('gameProgress')
-        sessionStorage.removeItem('turn')
-
-
         console.log(cookies, turn, boatPlacements)
         setEnemyBoardState(generateBoard())
-        setEnemyBoatPlacements([])
         setBoatPlacements([])
         setBoardState(generateBoard())
         setEnemyTargets(null)
         setTargets([])
         setBoats([2, 3, 4, 5])
-        setGameProgress('preplacement')
         // setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
         setBoatNames(Object.values(boatPlacements).map(item => item.name))
         setTurn(true)
+        setEnemyBoatPlacements([])
+        setGameProgress('preplacement')
+        setBluffing(false)
+        setSelecting(false)
+        setCharacter('none')
+        sessionStorage.removeItem('enemyBoardState')
+        sessionStorage.removeItem('boatPlacements')
+        sessionStorage.removeItem('boardState')
+        sessionStorage.removeItem('enemyTargets')
+        sessionStorage.removeItem('targets')
+        sessionStorage.removeItem('boats')
+        sessionStorage.removeItem('turn')
+        sessionStorage.removeItem('bluffing')
+        sessionStorage.removeItem('selecting')
+        sessionStorage.removeItem('character')
 
       }}>remove cookie</button>
       {/* </div>} */}
@@ -355,9 +370,6 @@ function App() {
           <button onClick={() => { orientation === 'v' ? setOrientation('h') : setOrientation('v') }}>
             change boat orientation
           </button>
-          <button onClick={() => { setCharacter('orangeMan') }}>orange mode</button>
-          <button onClick={() => { setCharacter('lineMan') }}>line mode</button>
-          <button onClick={() => { setCharacter('cornerMan') }}>corner mode</button>
 
           <Board board={boardState} player={'player'} character={character} socket={socket} cookies={cookies} setCookie={setCookie}
             boardState={boardState} setBoardState={setBoardState} enemyTargets={enemyTargets}
@@ -375,12 +387,18 @@ function App() {
             turn={turn} setTurn={setTurn} orangeShot={orangeShot}
             enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets}
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
-            vsAi={vsAi} enemyName={enemyName} selecting={selecting} />
+            vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
+            setTurnNumber={setTurnNumber} />
           {character === 'orangeMan' && <div>
             <button onClick={() => {
               if (bluffing === null) return
               if (turn) {
-                if (bluffing !== 'ready') setBluffing(prev => !prev)
+                if (bluffing !== 'ready') {
+                  setBluffing(prev => {
+                    sessionStorage.setItem('bluffing', JSON.stringify(!prev))
+                    return !prev
+                  })
+                }
                 if (bluffing === 'ready') {
                   setTurn(false)
                   setBluffing(null)
@@ -393,36 +411,75 @@ function App() {
           }
           {character === 'lineMan' && <div>
             <button onClick={() => {
-              let newState = { ...enemyBoardState }
-              for (const shot of lastShots) {
-                let hitOrMiss = (enemyTargets).includes(Number(shot))
-                let state = hitOrMiss ? 'hit' : 'missed'
-                newState[shot] = { id: shot, state, hover: false }
+              if (turn && !selecting) {
+                setTurn(false)
+                sessionStorage.setItem('turn', JSON.stringify(false))
+                let newState = { ...enemyBoardState }
+                for (const shot of lastShots) {
+                  let hitOrMiss = (enemyTargets).includes(Number(shot))
+                  let state = hitOrMiss ? 'hit' : 'missed'
+                  newState[shot] = { id: shot, state, hover: false }
+                }
+                setEnemyBoardState(newState)
+                socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id }))
               }
-              setEnemyBoardState(newState)
-              socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id }))
             }}>
               fireLastShots
             </button>
             <button onClick={() => {
-              setSelecting(prev => !prev)
+              if (turn) {
+                let newEnemyBoardState = { ...enemyBoardState }
+                for (const square in enemyBoardState) {
+                  if (enemyBoardState[square].state === 'missed') newEnemyBoardState[square].state = 'selectable'
+                  else if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'
+                }
+                setEnemyBoardState(newEnemyBoardState)
+                setSelecting(prev => {
+                  sessionStorage.setItem('selecting', JSON.stringify(!prev))
+                  return !prev
+                })
+                if (selecting) {
+                  console.log(selecting, 'selecting')
+                  setEnemyBoardState(prev => {
+                    console.log(Object.values(prev).findIndex(i => i.hover === 'green'))
+                    if (Object.values(prev).findIndex(i => i.hover === 'green') !== -1) {
+                      console.log('hello')
+                      prev[Object.values(prev).findIndex(i => i.hover === 'green')].hover = false
+                    }
+                    return prev
+                  })
+                }
+              }
             }}>
               makeLine
             </button>
           </div>
           }
         </> : cookies?.user?.state === 'matching' ? <>
+          <button onClick={() => {
+            sessionStorage.setItem('character', 'orangeMan')
+            setCharacter('orangeMan')
+          }}>orange mode</button>
+          <button onClick={() => {
+            sessionStorage.setItem('character', 'lineMan')
+            setCharacter('lineMan')
+          }}>line mode</button>
+          <button onClick={() => {
+            sessionStorage.setItem('character', 'cornerMan')
+            setCharacter('cornerMan')
+          }}>corner mode</button>
+
           <form onSubmit={(e) => setInformation(e)}>
             <label htmlFor='name'>name</label>
             {cookies.user?.name !== 'noName' ? <p>{cookies.user.name} wins/losses:{cookies.user.wins} / {cookies.user.losses}</p> : <input name='name' />}
             <label htmlFor='boat1'>destroyer</label>
-            <input name='boat1' value={boatNames[0]} />
+            <input name='boat1' defaultValue={boatNames[0]} />
             <label htmlFor='boat2'>cruiser</label>
-            <input name='boat2' value={boatNames[1]} />
+            <input name='boat2' defaultValue={boatNames[1]} />
             <label htmlFor='boat3'>battleship</label>
-            <input name='boat3' value={boatNames[2]} />
+            <input name='boat3' defaultValue={boatNames[2]} />
             <label htmlFor='boat4'>carrier</label>
-            <input name='boat4' value={boatNames[3]} />
+            <input name='boat4' defaultValue={boatNames[3]} />
             <button>submit</button>
           </form>
         </> : <>

@@ -6,6 +6,15 @@
   &.inactive {
     pointer-events: none;
   }
+  &.selectable {
+    background-color: rgb(226, 188, 117);
+  }
+  &.nope {
+    background-color: rgb(220, 31, 31);
+  }
+  &.selectable.green {
+    background-color: green;
+  }
   &.hit {
     background-color: red;
     pointer-events: none;
@@ -17,12 +26,15 @@
     background-color: orange;
     pointer-events: none;
   }
+  &.protected.missed {
+    background-color: rgb(203, 177, 128);
+  }
   &.protected.mine {
     background-color: orange;
   }
   &.missed {
     background-color: white;
-    // pointer-events: none;
+    pointer-events: none;
   }
   &.mine {
     background-color: black;

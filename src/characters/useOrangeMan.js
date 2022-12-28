@@ -1,12 +1,15 @@
 import { useState } from "react"
 
 let useOrangeMan = () => {
-    const [bluffing, setBluffing] = useState(false)
-    const [bluffShots, setBluffShots] = useState([])
+    const [bluffing, setBluffing] = useState(sessionStorage.getItem('bluffing') ? JSON.parse(sessionStorage.getItem('bluffing')) : false)
+    const [bluffShots, setBluffShots] = useState(sessionStorage.getItem('bluffShots') ? JSON.parse(sessionStorage.getItem('bluffShots')) : [])
     const orangeShot = (playerOrAiCallback, index, enemyTargets, enemyBoardState,
         setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement, setBoardState) => {
         if (bluffing) {
-            setBluffShots(prev => [...prev, index])
+            setBluffShots(prev => {
+                sessionStorage.setItem('bluffShots', JSON.stringify([...prev, index]))
+                return [...prev, index]
+            })
             console.log(bluffShots)
             setBoardState(prev => {
                 let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')

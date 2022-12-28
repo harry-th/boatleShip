@@ -7,6 +7,15 @@
 .square.inactive {
   pointer-events: none;
 }
+.square.selectable {
+  background-color: rgb(226, 188, 117);
+}
+.square.nope {
+  background-color: rgb(220, 31, 31);
+}
+.square.selectable.green {
+  background-color: green;
+}
 .square.hit {
   background-color: red;
   pointer-events: none;
@@ -18,11 +27,15 @@
   background-color: orange;
   pointer-events: none;
 }
+.square.protected.missed {
+  background-color: rgb(203, 177, 128);
+}
 .square.protected.mine {
   background-color: orange;
 }
 .square.missed {
   background-color: white;
+  pointer-events: none;
 }
 .square.mine {
   background-color: black;
