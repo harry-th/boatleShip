@@ -29,13 +29,13 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         : (shot, shotData) => {
           let freeShot
           if (enemyBoardState[shot] === 'missed') return
-          if (turnNumber !== 3) setTurn(false)
-          if (turnNumber === 3) {
+          if (turnNumber !== 4) setTurn(false)
+          if (turnNumber === 4) {
             setTurnNumber(0)
             freeShot = true
           }
           sessionStorage.setItem('turn', JSON.stringify(false))
-          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, ...shotData, freeShot }))
+          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot, ...shotData }))
           else
             socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot }))
         }
@@ -88,7 +88,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(turnNumber, turn) }}>print</button>
+      <button onClick={() => { console.log(boardState) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>

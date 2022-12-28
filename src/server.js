@@ -51,8 +51,13 @@ wss.on('connection', (ws, req) => {
             delete groups[groups[message.id]]
             return
         }
+        if (message.callBluff) {
+            wscodes[groups[message.id]].send(JSON.stringify({ callBluff: true, boardState: message.boardState }))
+            return
+        }
         if (message.dataType === 'shot') {
             if (message.bluffArray) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, bluffArray: message.bluffArray }))
+            else if (message.orange && message.freeShot) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing, freeShot: true }))
             else if (message.orange) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing }))
             else if (message.freeShot) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, freeShot: true }))
             else

@@ -176,6 +176,15 @@ function App() {
         setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
         setGameProgress('losing screen')
       }
+      if (message.callBluff) {
+        setTurn(true)
+        sessionStorage.setItem('turn', JSON.stringify(true))
+        setTurnNumber(prev => prev - 3)
+        if (bluffing) {
+          setBluffing(null)
+          setEnemyBoardState(message.boardState)
+        }
+      }
       if (message.bluffArray) {
         console.log(message.bluffArray)
         let newBoardState = { ...boardState }
@@ -229,10 +238,10 @@ function App() {
         }
         if (message.orange) {
           setEnemyBoardState(prev => {
-            let oldProtected = Object.values(prev).findIndex(i => i.state === 'protected')
-            if (prev[oldProtected]?.state) prev[oldProtected].state = prev[oldProtected].oldState
-            prev[message.index].oldState = prev[message.index].state
-            prev[message.index].state = 'protected'
+            let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+            if (prev[oldProtected]?.hover) prev[oldProtected].hover = prev[oldProtected].oldState
+            prev[message.index].oldState = prev[message.index].hover
+            prev[message.index].hover = 'protected'
             return prev
           })
         }
@@ -455,6 +464,15 @@ function App() {
             </button>
           </div>
           }
+          {Object.values(enemyBoardState).some(i => i.hover === 'protected') && <button onClick={() => {
+            let newBoardState = { ...boardState }
+            for (const square in newBoardState) {
+              if (newBoardState[square].state === 'mine') newBoardState[square].state = null
+              if (newBoardState[square].hover) newBoardState[square].hover = false
+            }
+            console.log(newBoardState)
+            socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: newBoardState }))
+          }}>call bluff</button>}
         </> : cookies?.user?.state === 'matching' ? <>
           <button onClick={() => {
             sessionStorage.setItem('character', 'orangeMan')
