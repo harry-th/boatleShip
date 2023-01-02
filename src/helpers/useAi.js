@@ -67,6 +67,7 @@ export function useAi() {
         newState[enemyAttack] = { id: enemyAttack, state, hover: false }
         setBoardState(newState)
         if (hitOrMiss) {
+            alert('you got HIT!')
             const allHits = Object.values(newState).filter((item) => {
                 return item.state === 'hit'
             }).map((el) => Number(el.id))
@@ -81,7 +82,6 @@ export function useAi() {
             }
             if (Object.values(boatPlacements).filter((i) => i?.sunk).length === 4) console.log('You Lose!')
 
-            alert('you got HIT!')
         }
     }
     return {

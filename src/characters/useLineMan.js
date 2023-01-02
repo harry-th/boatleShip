@@ -127,6 +127,8 @@ const useLineMan = () => {
                 let state = hitOrMiss ? 'hit' : 'missed'
                 newEnemyBoardState[item] = { id: item, state, hover: false }
                 if (hitOrMiss) {
+                    alert('Nice Shot!')
+
                     const allHits = Object.values(newEnemyBoardState).filter((item) => {
                         return item.state === 'hit'
                     }).map((el) => el.id)
@@ -140,7 +142,6 @@ const useLineMan = () => {
                         }
                     }
 
-                    alert('Nice Shot!')
                 }
             }
             for (const square in enemyBoardState) {

@@ -10,7 +10,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
   gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie,
-  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber }) => {
+  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber, turnTime }) => {
 
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
@@ -88,6 +88,8 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
+      {(player === 'player') && turnTime}
+
       <button onClick={() => { console.log(enemyBoatPlacements) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}

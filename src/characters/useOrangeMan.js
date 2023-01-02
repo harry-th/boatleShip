@@ -30,6 +30,7 @@ let useOrangeMan = () => {
             })
             setEnemyBoardState(newState)
             if (hitOrMiss) {
+                alert('Nice Shot!')
                 const allHits = Object.values(newState).filter((item) => {
                     return item.state === 'hit'
                 }).map((el) => el.id)
@@ -43,7 +44,6 @@ let useOrangeMan = () => {
                     }
                 }
 
-                alert('Nice Shot!')
             }
         }
         playerOrAiCallback(index, { bluffing, orange: true })

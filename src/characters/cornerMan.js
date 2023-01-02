@@ -49,9 +49,17 @@ let cornerMan = () => {
                 if (allHits.includes(enemyBoatPlacements[boat].positions[0]) && allHits.includes(enemyBoatPlacements[boat].positions[enemyBoatPlacements[boat].positions.length - 1])) {
                     multiple = enemyBoatPlacements[boat].positions
                     for (const pos of multiple) {
-                        newState[pos] = { id: pos, state, hover: false }
+                        newState[pos] = { id: index, state, hover: false }
                     }
                     alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                } else {
+                    if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
+                        setEnemyBoatPlacements(prev => {
+                            prev[boat].sunk = true
+                            return { ...prev }
+                        })
+                        alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                    }
                 }
             }
         }

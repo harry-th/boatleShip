@@ -34,6 +34,11 @@ wss.on('connection', (ws, req) => {
         if (message.turnOrder) {
             return
         }
+        if (message.timeOutWin) {
+            console.log('timeOutWin')
+            ws.send(JSON.stringify({ win: 'by default' }))
+            return
+        }
         if (message.win) {
             if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'win' }))
             delete groups[message.id]
@@ -41,6 +46,7 @@ wss.on('connection', (ws, req) => {
             return
         }
         if (message.forfeit) {
+            console.log('forfeit')
             if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forfeit' }))
             delete groups[message.id]
             delete groups[groups[message.id]]

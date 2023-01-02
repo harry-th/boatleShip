@@ -5,6 +5,7 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
     newState[index] = { id: index, state, hover: false }
     setEnemyBoardState(newState)
     if (hitOrMiss) {
+        alert('Nice Shot!')
         const allHits = Object.values(newState).filter((item) => {
             return item.state === 'hit'
         }).map((el) => el.id)
@@ -18,7 +19,6 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
             }
         }
 
-        alert('Nice Shot!')
     }
     playerOrAiCallback(index)
 }
