@@ -50,7 +50,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
             setBoardState
           ) : character === 'lineMan' && selecting ?
-            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting)
+            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacement)
             : shotLogic(callback,
               index, enemyTargets, enemyBoardState,
               setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
@@ -88,7 +88,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      <button onClick={() => { console.log(boardState) }}>print</button>
+      <button onClick={() => { console.log(enemyBoatPlacements) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>

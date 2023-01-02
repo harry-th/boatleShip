@@ -10,7 +10,6 @@ let cornerMan = () => {
         for (let i = 0; i < positions.length; i++) {
             if (positions[i] > 100) positions[i] = positions[i] - 99
         }
-        console.log(positions)
         // if (orientation === 'h' && (Math.floor(positions[positions.length - 1] / 10) * 10) - (Math.floor(positions[0] / 10) * 10) > 0) return
         // if (orientation === 'v' && positions[positions.length - 1] > 99) return
         if (boats.length === 1 && vsAi) {
@@ -34,7 +33,7 @@ let cornerMan = () => {
             return prev.slice(1, prev.length)
         })
     }
-    const cornerShot = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement) => {
+    const cornerShot = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacements) => {
         let hitOrMiss = enemyTargets.includes(index)
         let multiple
         let state = hitOrMiss ? 'hit' : 'missed'
@@ -44,28 +43,19 @@ let cornerMan = () => {
             return item.state === 'hit'
         }).map((el) => el.id)
         if (hitOrMiss) {
+            alert('Nice Shot!')
+
             for (const boat in enemyBoatPlacements) {
                 if (allHits.includes(enemyBoatPlacements[boat].positions[0]) && allHits.includes(enemyBoatPlacements[boat].positions[enemyBoatPlacements[boat].positions.length - 1])) {
                     multiple = enemyBoatPlacements[boat].positions
                     for (const pos of multiple) {
-                        newState[pos] = { id: index, state, hover: false }
+                        newState[pos] = { id: pos, state, hover: false }
                     }
+                    alert(`${enemyBoatPlacements[boat].name} was sunk!`)
                 }
             }
         }
         setEnemyBoardState(newState)
-        if (hitOrMiss) {
-            for (const boat in enemyBoatPlacements) {
-                if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
-                    setEnemyBoatPlacement(prev => {
-                        prev[boat].sunk = true
-                        return { ...prev }
-                    })
-                    alert(`${enemyBoatPlacements[boat].name} was sunk!`)
-                }
-            }
-            alert('Nice Shot!')
-        }
         playerOrAiCallback(multiple || index)
     }
 
@@ -78,7 +68,6 @@ let cornerMan = () => {
             for (let i = 0; i < coords.length; i++) {
                 if (coords[i] > 99) coords[i] = coords[i] - 99
             }
-            console.log(coords)
             let newBoardState = { ...boardState }
             for (let i = 0; i < coords.length; i++) {
                 if (boardState[coords[i]]?.state === 'mine') return

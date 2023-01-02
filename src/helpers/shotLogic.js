@@ -1,4 +1,4 @@
-let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement) => {
+let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacements) => {
     let hitOrMiss = enemyTargets.includes(index)
     let state = hitOrMiss ? 'hit' : 'missed'
     let newState = { ...enemyBoardState }
@@ -10,7 +10,7 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
         }).map((el) => el.id)
         for (const boat in enemyBoatPlacements) {
             if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
-                setEnemyBoatPlacement(prev => {
+                setEnemyBoatPlacements(prev => {
                     prev[boat].sunk = true
                     return { ...prev }
                 })

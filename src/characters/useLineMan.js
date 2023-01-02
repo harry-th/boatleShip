@@ -5,7 +5,7 @@ const useLineMan = () => {
     const [selection, setSelection] = useState([])
     const [selecting, setSelecting] = useState(sessionStorage.getItem('selecting') ? JSON.parse(sessionStorage.getItem('selecting')) : false)
 
-    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting) => {
+    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacements) => {
         if (selection[0] === index) {
             setSelection([])
             setEnemyBoardState(prev => {
@@ -126,6 +126,22 @@ const useLineMan = () => {
                 let hitOrMiss = enemyTargets.includes(item)
                 let state = hitOrMiss ? 'hit' : 'missed'
                 newEnemyBoardState[item] = { id: item, state, hover: false }
+                if (hitOrMiss) {
+                    const allHits = Object.values(newEnemyBoardState).filter((item) => {
+                        return item.state === 'hit'
+                    }).map((el) => el.id)
+                    for (const boat in enemyBoatPlacements) {
+                        if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
+                            setEnemyBoatPlacements(prev => {
+                                prev[boat].sunk = true
+                                return { ...prev }
+                            })
+                            alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                        }
+                    }
+
+                    alert('Nice Shot!')
+                }
             }
             for (const square in enemyBoardState) {
                 if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'

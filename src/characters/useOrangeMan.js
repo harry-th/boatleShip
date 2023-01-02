@@ -4,7 +4,7 @@ let useOrangeMan = () => {
     const [bluffing, setBluffing] = useState(sessionStorage.getItem('bluffing') ? JSON.parse(sessionStorage.getItem('bluffing')) : false)
     const [bluffShots, setBluffShots] = useState(sessionStorage.getItem('bluffShots') ? JSON.parse(sessionStorage.getItem('bluffShots')) : [])
     const orangeShot = (playerOrAiCallback, index, enemyTargets, enemyBoardState,
-        setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement, setBoardState) => {
+        setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacements, setBoardState) => {
         if (bluffing) {
             setBluffShots(prev => {
                 sessionStorage.setItem('bluffShots', JSON.stringify([...prev, index]))
@@ -35,7 +35,7 @@ let useOrangeMan = () => {
                 }).map((el) => el.id)
                 for (const boat in enemyBoatPlacements) {
                     if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
-                        setEnemyBoatPlacement(prev => {
+                        setEnemyBoatPlacements(prev => {
                             prev[boat].sunk = true
                             return { ...prev }
                         })

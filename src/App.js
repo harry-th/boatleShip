@@ -37,8 +37,21 @@ function App() {
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
 
+  // useEffect(() => {
+  //   setEnemyBoatPlacements(prev => {
+  //     const allHits = Object.values(enemyBoardState).filter((item) => {
+  //       return item.state === 'hit'
+  //     }).map((el) => el.id)
+  //     for (const boat in prev) {
+  //       if (prev[boat].positions.every((b) => allHits.includes(b))) {
+  //         prev[boat].sunk = true
+  //       }
+  //     }
+  //     return prev
+  //   })
+  // }, [enemyBoardState])
   useEffect(() => {
-    console.log('win/ storage refresh')
+    // console.log('win/ storage refresh')
     const reset = () => {
       setEnemyBoardState(generateBoard())
       setBoatPlacements([])
@@ -82,6 +95,7 @@ function App() {
       getEncryptBoats()
     }
     if (!sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing') {
+      console.log('setboats')
       const setEncryptBoats = async () => {
         const secret = new TextEncoder().encode(
           process.env.REACT_APP_secret_access_code,
@@ -132,7 +146,7 @@ function App() {
 
 
   useEffect(() => {
-    console.log('ws refresh')
+    // console.log('ws refresh')
     const reset = () => {
       setEnemyBoardState(generateBoard())
       setBoatPlacements([])
@@ -186,7 +200,6 @@ function App() {
         }
       }
       if (message.bluffArray) {
-        console.log(message.bluffArray)
         let newBoardState = { ...boardState }
         let newBoatPlacements = { ...boatPlacements }
         for (const bluff of message.bluffArray) {
@@ -211,6 +224,8 @@ function App() {
         setCookie('user', { ...cookies.user, state: 'ongoing' })
         setGameProgress('ongoing')
         sessionStorage.setItem('gameProgress', 'ongoing')
+        sessionStorage.setItem('boardState', JSON.stringify(boardState))
+
         setEnemyBoatPlacements(message.boatPlacements)
         let enemyTargets = Object.values(message.boatPlacements).map(item => item.positions).flat()
         let targets = Object.values(boatPlacements).map(i => i.positions).flat()
@@ -291,7 +306,7 @@ function App() {
   }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements, setLastShots])
 
   useEffect(() => {
-    console.log('sendboats refresh')
+    // console.log('sendboats refresh')
     if (Object.keys(boatPlacements).length === 4 && !dataSent) {
       let sendBoats = (socket) => {
         if (socket?.readyState === 1) {
@@ -316,7 +331,6 @@ function App() {
   const setInformation = (e) => {
     e.preventDefault()
     let names = Object.values(e.target).filter(i => i.name).map(item => item.value)
-    console.log(names)
     let name = names.shift()
     let newBoatNames = [...boatNames]
     for (let i = 0; i < names.length; i++) {
@@ -366,6 +380,7 @@ function App() {
         sessionStorage.removeItem('bluffing')
         sessionStorage.removeItem('selecting')
         sessionStorage.removeItem('character')
+        sessionStorage.removeItem('enemyBoatPlacements')
 
       }}>remove cookie</button>
       {/* </div>} */}
@@ -427,7 +442,24 @@ function App() {
                 for (const shot of lastShots) {
                   let hitOrMiss = (enemyTargets).includes(Number(shot))
                   let state = hitOrMiss ? 'hit' : 'missed'
-                  newState[shot] = { id: shot, state, hover: false }
+                  if (hitOrMiss && newState[shot].state !== 'hit') {
+                    newState[shot] = { id: shot, state, hover: false }
+                    const allHits = Object.values(newState).filter((item) => {
+                      return item.state === 'hit'
+                    }).map((el) => el.id)
+                    for (const boat in enemyBoatPlacements) {
+                      if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
+                        setEnemyBoatPlacements(prev => {
+                          prev[boat].sunk = true
+                          return { ...prev }
+                        })
+                        alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                      }
+                    }
+                    newState[shot] = { id: shot, state, hover: false }
+
+                    alert('Nice Shot!')
+                  }
                 }
                 setEnemyBoardState(newState)
                 socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id }))
@@ -450,9 +482,7 @@ function App() {
                 if (selecting) {
                   console.log(selecting, 'selecting')
                   setEnemyBoardState(prev => {
-                    console.log(Object.values(prev).findIndex(i => i.hover === 'green'))
                     if (Object.values(prev).findIndex(i => i.hover === 'green') !== -1) {
-                      console.log('hello')
                       prev[Object.values(prev).findIndex(i => i.hover === 'green')].hover = false
                     }
                     return prev
@@ -470,7 +500,6 @@ function App() {
               if (newBoardState[square].state === 'mine') newBoardState[square].state = null
               if (newBoardState[square].hover) newBoardState[square].hover = false
             }
-            console.log(newBoardState)
             socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: newBoardState }))
           }}>call bluff</button>}
         </> : cookies?.user?.state === 'matching' ? <>
