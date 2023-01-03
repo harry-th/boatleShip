@@ -198,8 +198,9 @@ const useLineMan = () => {
                                 console.log(shot)
                                 let hitOrMiss = (enemyTargets).includes(Number(shot))
                                 let state = hitOrMiss ? 'hit' : 'missed'
-                                newState[shot] = { id: shot, state, hover: false }
                                 if (hitOrMiss && newState[shot].state !== 'hit') {
+                                    newState[shot] = { id: shot, state, hover: false }
+
                                     alert('Nice Shot!')
                                     const allHits = Object.values(newState).filter((item) => {
                                         return item.state === 'hit'
@@ -214,6 +215,7 @@ const useLineMan = () => {
                                         }
                                     }
                                 }
+                                newState[shot] = { id: shot, state, hover: false }
                             }
                             setEnemyBoardState(newState)
                             socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id, freeShot }))

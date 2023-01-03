@@ -1,0 +1,34 @@
+.customization {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  .characterselect {
+    width: 500px;
+    display: flex;
+    justify-content: center;
+    div {
+      width: 150px;
+      height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: blue;
+      margin: 10px;
+      cursor: pointer;
+      &:hover {
+        background-color: red;
+      }
+    }
+  }
+  .boatform {
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    .boatfields {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
