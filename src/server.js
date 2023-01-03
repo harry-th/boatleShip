@@ -34,11 +34,6 @@ wss.on('connection', (ws, req) => {
         if (message.turnOrder) {
             return
         }
-        if (message.timeOutWin) {
-            console.log('timeOutWin')
-            ws.send(JSON.stringify({ win: 'by default' }))
-            return
-        }
         if (message.win) {
             if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'win' }))
             delete groups[message.id]

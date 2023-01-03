@@ -15,6 +15,7 @@ let useOrangeMan = () => {
                 let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
                 if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
                 prev[index].hover = 'protected'
+                sessionStorage.setItem('boardState', JSON.stringify(prev))
                 return prev
             })
         } else {
@@ -26,6 +27,7 @@ let useOrangeMan = () => {
                 let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
                 if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
                 prev[index].hover = 'protected'
+                sessionStorage.setItem('boardState', JSON.stringify(prev))
                 return prev
             })
             setEnemyBoardState(newState)
@@ -70,7 +72,28 @@ let useOrangeMan = () => {
         console.log(retaliation)
         socket.send(JSON.stringify({ dataType: 'shot', index: retaliation, id: cookies.user.id, bluffArray: bluffShots }))
     }
-    return { bluffing, setBluffing, bluffShots, setBluffShots, orangeShot, fireBluffShots }
+    const OrangeManUI = ({ turn, setTurn, socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState }) => {
+        return (<div>
+            <button onClick={() => {
+                if (bluffing === null) return
+                if (turn) {
+                    if (bluffing !== 'ready') {
+                        setBluffing(prev => {
+                            sessionStorage.setItem('bluffing', JSON.stringify(!prev))
+                            return !prev
+                        })
+                    }
+                    if (bluffing === 'ready') {
+                        setTurn(false)
+                        setBluffing(null)
+                        fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
+                    }
+                }
+            }}>{bluffing === 'ready' ? 'fire Retaliation' :
+                bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
+        </div>)
+    }
+    return { bluffing, setBluffing, bluffShots, setBluffShots, orangeShot, fireBluffShots, OrangeManUI }
 }
 
 export default useOrangeMan

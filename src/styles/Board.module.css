@@ -10,6 +10,9 @@
 .square.selectable {
   background-color: rgb(226, 188, 117);
 }
+.square.twoShot {
+  background-color: yellow;
+}
 .square.nope {
   background-color: rgb(220, 31, 31);
 }

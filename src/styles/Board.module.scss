@@ -9,6 +9,9 @@
   &.selectable {
     background-color: rgb(226, 188, 117);
   }
+  &.twoShot {
+    background-color: yellow;
+  }
   &.nope {
     background-color: rgb(220, 31, 31);
   }

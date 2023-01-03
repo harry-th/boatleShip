@@ -6,14 +6,16 @@ import { useCookies } from 'react-cookie';
 import generateBoard from './helpers/generateBoard';
 import useOrangeMan from './characters/useOrangeMan';
 import useLineMan from './characters/useLineMan';
+import Customization from './components/Customization';
+import Endofgame from './components/Endofgame';
 let randomstring = require("randomstring");
 const jose = require('jose');
 
 function App() {
 
   const [character, setCharacter] = useState(sessionStorage.getItem('character') || 'none')
-  let { bluffing, setBluffing, orangeShot, fireBluffShots } = useOrangeMan()
-  let { lastShots, setLastShots, selecting, setSelecting } = useLineMan()
+  let { bluffing, setBluffing, orangeShot, setBluffShots, OrangeManUI } = useOrangeMan()
+  let { setLastShots, selecting, setSelecting, setSelection, setCharges, LineManUI } = useLineMan()
 
   const [cookies, setCookie, removeCookie] = useCookies(['user']);
   const [socket, setSocket] = useState(null);
@@ -28,17 +30,18 @@ function App() {
   const [targets, setTargets] = useState(sessionStorage.getItem('targets') ? JSON.parse(sessionStorage.getItem('targets')) : [])
   const [boatNames, setBoatNames] = useState(['destroyer', 'cruiser', 'battleship', 'carrier'])
   const [turnNumber, setTurnNumber] = useState(0)
-  const [turnTime, setTurnTime] = useState(30)
+  const [turnTime, setTurnTime] = useState(sessionStorage.getItem('turnTime') ? JSON.parse(sessionStorage.getItem('turnTime')) : 60)
 
+  const [wasBluffing, setWasBluffing] = useState(sessionStorage.getItem('wasBluffing') || 'no')
   const [enemyBoatPlacements, setEnemyBoatPlacements] = useState([])
   const [enemyBoats, setEnemyBoats] = useState([2, 3, 4, 5])
   const [enemyBoardState, setEnemyBoardState] = useState(sessionStorage.getItem('enemyBoardState') ? JSON.parse(sessionStorage.getItem('enemyBoardState')) : generateBoard())
   const [enemyTargets, setEnemyTargets] = useState(Object.values(enemyBoatPlacements)?.map(item => item.positions).flat() || null)
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
 
-  const [intCode, setIntCode] = useState(null)
-  const [timeCode, setTimeCode] = useState(null)
-  const [AfkTimeCode, setAfkTimeCode] = useState(null)
+  const [intCode, setIntCode] = useState(sessionStorage.getItem('intCode') || null)
+  const [timeCode, setTimeCode] = useState(sessionStorage.getItem('timeCode') || null)
+  const [AfkTimeCode, setAfkTimeCode] = useState(sessionStorage.getItem('AfkTimeCode') || null)
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
   useEffect(() => {
@@ -52,55 +55,71 @@ function App() {
       setTargets([])
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
       setTurnNumber(0)
-      setTurnTime(30)
+      // setTurnTime(30)
       setEnemyBoatPlacements([])
       setEnemyBoats([2, 3, 4, 5])
       setEnemyBoardState(generateBoard())
       setEnemyTargets(null)
-      setEnemyName(sessionStorage.getItem('enemyName'))
       setIntCode(null)
       setTimeCode(null)
       setAfkTimeCode(null)
       setDataSent(false)
-    }
-    sessionStorage.clear()
-  }, [cookies])
+      //orangeman
+      setBluffing(false)
+      setBluffShots([])
+      //lineman
+      setLastShots([])
+      setSelecting(false)
+      setSelection([])
+      setCharges(4)
 
-  useEffect(() => {
-    if (gameProgress === 'losing screen' && turnTime === 'timeout') {
-      let sendBoats = (socket) => {
-        if (socket?.readyState === 1) {
-          socket.send(JSON.stringify({ id: cookies.user.id, forfeit: true }))
-        } else {
-          setTimeout(() => {
-            sendBoats(socket)
-          }, 200);
-        }
-      }
-      sendBoats(socket)
+      sessionStorage.clear()
+      clearInterval(intCode)
+      clearTimeout(timeCode)
+      clearTimeout(AfkTimeCode)
     }
-  }, [socket, gameProgress, cookies, turnTime])
+  }, [cookies, intCode, timeCode, AfkTimeCode, setBluffing, setBluffShots, setLastShots, setSelecting, setSelection, setCharges,])
+
+
   useEffect(() => {
     if (!isNaN(Number(turnTime))) {
       if (turn && gameProgress === 'ongoing' && !Array.isArray(enemyBoatPlacements) && !timeCode) {
-        setIntCode(setInterval(() => {
-          setTurnTime(prev => prev - 1)
-        }, 1000))
-        setTimeCode(setTimeout(() => {
+        let intcode = setInterval(() => {
+          setTurnTime(prev => {
+            sessionStorage.setItem('turnTime', JSON.stringify(prev - 1))
+            return prev - 1
+          })
+        }, 1000)
+        setIntCode(intcode)
+        sessionStorage.setItem('intCode', intcode)
+        let timecode = setTimeout(() => {
           setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
           setGameProgress('losing screen')
           setTurnTime('timeout')
-        }, 30000))
+        }, turnTime * 1000)
+        setTimeCode(timecode)
+        sessionStorage.setItem('timeCode', timecode)
       } else if ((timeCode || intCode) && !turn) {
         console.log('close')
         setTimeCode(null)
         setIntCode(null)
-        setTurnTime(30)
+        sessionStorage.removeItem('timeCode')
+        sessionStorage.removeItem('intCode')
+        setTurnTime(prev => {
+          if (prev + 20 > 120) {
+            sessionStorage.setItem('turnTime', JSON.stringify(120))
+            return 120
+          } else {
+            sessionStorage.setItem('turnTime', JSON.stringify(prev + 20))
+            return prev + 20
+          }
+        })
         clearTimeout(timeCode)
-        clearTimeout(intCode)
+        clearInterval(intCode)
       }
     }
   }, [socket, turnTime, timeCode, intCode, enemyBoatPlacements, turn, gameProgress, cookies, setCookie])
+
   useEffect(() => {
     setEnemyBoatPlacements(prev => {
       const allHits = Object.values(enemyBoardState).filter((item) => {
@@ -114,8 +133,8 @@ function App() {
       return prev
     })
   }, [enemyBoardState])
-  useEffect(() => {
 
+  useEffect(() => {
     if (sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing' && Array.isArray(enemyBoatPlacements)) {
       const getEncryptBoats = async () => {
         console.log('getboats')
@@ -189,8 +208,8 @@ function App() {
       console.log(message)
       if (message.turn) {
         setTurn(false)
-        setTurnNumber(prev => prev + 1)
         sessionStorage.setItem('turn', JSON.stringify(false))
+        setTurnNumber(prev => prev + 1)
       }
       if (message.dataType === 'forfeit') {
         setCookie('user', { ...cookies.user, state: 'gameover', wins: cookies.user.wins + 1 })
@@ -200,16 +219,22 @@ function App() {
       //   setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
       //   setGameProgress('losing screen')
       // }
+      if (message.bluffing) {
+        setWasBluffing('yes')
+        sessionStorage.setItem('wasBluffing', 'yes')
+      } else {
+        setWasBluffing('no')
+        sessionStorage.setItem('wasBluffing', 'no')
+      }
       if (message.callBluff) {
         setTurn(true)
         sessionStorage.setItem('turn', JSON.stringify(true))
-        setTurnNumber(prev => prev - 3)
         if (bluffing) {
           setBluffing(null)
           setEnemyBoardState(message.boardState)
         }
       }
-      if (message.bluffArray) {
+      if (message.bluffArray) { //comes from shot before realitation
         let newBoardState = { ...boardState }
         let newBoatPlacements = { ...boatPlacements }
         for (const bluff of message.bluffArray) {
@@ -230,6 +255,9 @@ function App() {
         setCookie('user', { ...cookies.user, state: 'matched' })
         setGameProgress('placement')
         sessionStorage.setItem('gameProgress', 'placement')
+        setTurnTime(60)
+        sessionStorage.setItem('turnTime', JSON.stringify(60))
+
       } else if (message.state === 'ongoing') {
         setCookie('user', { ...cookies.user, state: 'ongoing' })
         setGameProgress('ongoing')
@@ -316,50 +344,66 @@ function App() {
   }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements, setLastShots])
 
   useEffect(() => {
-    // console.log('sendboats refresh')
     if (Object.keys(boatPlacements).length === 4 && !dataSent && gameProgress === 'placement') {
-      let sendBoats = (socket) => {
-        if (socket?.readyState === 1) {
+      if (socket?.readyState === 1) {
+        console.log('ran')
+        let sendBoats = (socket) => {
+          console.log('not done')
+          if (socket?.readyState === 1) {
+            console.log('done')
+            setDataSent(true)
+            socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))
+          }
+          // else {
+          //   setTimeout(() => {
+          //     console.log('hello')
+          //     sendBoats(socket)
+          //   }, 200);
+          // }
+        }
+        sendBoats(socket)
+      } else {
+        if (socket.readyState === 0) {
           setDataSent(true)
-          socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))
-        } else {
-          setTimeout(() => {
-            sendBoats(socket)
-          }, 200);
+          socket.onopen = () => {
+            socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))
+          }
         }
       }
-      sendBoats(socket)
     } else if (cookies?.user?.state === 'gameover') {
       setDataSent(false)
     }
-  }, [socket, boatPlacements, gameProgress, cookies, dataSent, vsAi])
+  }, [socket, boatPlacements, gameProgress, cookies, dataSent])
 
   useEffect(() => {
     if (!turn && !AfkTimeCode) {
-      setAfkTimeCode(setTimeout(() => {
+      let code = setTimeout(() => {
         setCookie('user', { ...cookies.user, state: 'gameover', wins: cookies.user.wins + 1 })
         setGameProgress('winning screen')
-      }, 150000))
+      }, 140000)
+      setAfkTimeCode(code)
+      sessionStorage.setItem('afkTimeCode', code)
     } else if (turn) {
-      setAfkTimeCode(null)
       clearTimeout(AfkTimeCode)
+      setAfkTimeCode(null)
+      sessionStorage.removeItem('afkTimecode')
     }
   }, [turn, AfkTimeCode, cookies, setCookie])
 
 
   const { generateTargets } = useAi()
 
-  const setInformation = (e) => {
-    e.preventDefault()
-    let names = Object.values(e.target).filter(i => i.name).map(item => item.value)
-    let name = names.shift()
-    let newBoatNames = [...boatNames]
-    for (let i = 0; i < names.length; i++) {
-      newBoatNames[i] = names[i] || newBoatNames[i]
-    }
-    setBoatNames(newBoatNames)
-    setCookie('user', { ...cookies.user, name })
-  }
+  // const setInformation = (e) => {
+  //   e.preventDefault()
+  //   let names = Object.values(e.target).filter(i => i.name).map(item => item.value)
+  //   let name = names.shift()
+  //   let newBoatNames = [...boatNames]
+  //   for (let i = 0; i < names.length; i++) {
+  //     newBoatNames[i] = names[i] || newBoatNames[i]
+  //   }
+  //   setBoatNames(newBoatNames)
+  //   setCookie('user', { ...cookies.user, name })
+  // }
 
   return (
     <div className="App">
@@ -390,18 +434,9 @@ function App() {
         setGameProgress('preplacement')
         setBluffing(false)
         setSelecting(false)
+        setDataSent(false)
         setCharacter('none')
-        sessionStorage.removeItem('enemyBoardState')
-        sessionStorage.removeItem('boatPlacements')
-        sessionStorage.removeItem('boardState')
-        sessionStorage.removeItem('enemyTargets')
-        sessionStorage.removeItem('targets')
-        sessionStorage.removeItem('boats')
-        sessionStorage.removeItem('turn')
-        sessionStorage.removeItem('bluffing')
-        sessionStorage.removeItem('selecting')
-        sessionStorage.removeItem('character')
-        sessionStorage.removeItem('enemyBoatPlacements')
+        sessionStorage.clear()
 
       }}>remove cookie</button>
       {/* </div>} */}
@@ -433,138 +468,37 @@ function App() {
             enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets}
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
-            setTurnNumber={setTurnNumber} />
-          {character === 'orangeMan' && <div>
-            <button onClick={() => {
-              if (bluffing === null) return
-              if (turn) {
-                if (bluffing !== 'ready') {
-                  setBluffing(prev => {
-                    sessionStorage.setItem('bluffing', JSON.stringify(!prev))
-                    return !prev
-                  })
-                }
-                if (bluffing === 'ready') {
-                  setTurn(false)
-                  setBluffing(null)
-                  fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
-                }
-              }
-            }}>{bluffing === 'ready' ? 'fire Retaliation' :
-              bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
-          </div>
+            setTurnNumber={setTurnNumber} setCharges={setCharges} />
+          {turnNumber}
+          {character === 'orangeMan' && <OrangeManUI turn={turn} setTurn={setTurn} socket={socket}
+            enemyBoardState={enemyBoardState} enemyTargets={enemyTargets} cookies={cookies}
+            setEnemyBoardState={setEnemyBoardState} />
           }
-          {character === 'lineMan' && <div>
-            <button onClick={() => {
-              if (turn && !selecting) {
-                setTurn(false)
-                sessionStorage.setItem('turn', JSON.stringify(false))
-                let newState = { ...enemyBoardState }
-                for (const shot of lastShots) {
-                  console.log(shot)
-                  let hitOrMiss = (enemyTargets).includes(Number(shot))
-                  let state = hitOrMiss ? 'hit' : 'missed'
-                  newState[shot] = { id: shot, state, hover: false }
-                  if (hitOrMiss && newState[shot].state !== 'hit') {
-                    alert('Nice Shot!')
-                    const allHits = Object.values(newState).filter((item) => {
-                      return item.state === 'hit'
-                    }).map((el) => el.id)
-                    for (const boat in enemyBoatPlacements) {
-                      if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
-                        setEnemyBoatPlacements(prev => {
-                          prev[boat].sunk = true
-                          return { ...prev }
-                        })
-                        alert(`${enemyBoatPlacements[boat].name} was sunk!`)
-                      }
-                    }
-                  }
-                }
-                console.log(newState)
-                setEnemyBoardState(newState)
-                socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id }))
-              }
-            }}>
-              fireLastShots
-            </button>
-            <button onClick={() => {
-              if (turn) {
-                let newEnemyBoardState = { ...enemyBoardState }
-                for (const square in enemyBoardState) {
-                  if (enemyBoardState[square].state === 'missed') newEnemyBoardState[square].state = 'selectable'
-                  else if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'
-                }
-                setEnemyBoardState(newEnemyBoardState)
-                setSelecting(prev => {
-                  sessionStorage.setItem('selecting', JSON.stringify(!prev))
-                  return !prev
-                })
-                if (selecting) {
-                  console.log(selecting, 'selecting')
-                  setEnemyBoardState(prev => {
-                    if (Object.values(prev).findIndex(i => i.hover === 'green') !== -1) {
-                      prev[Object.values(prev).findIndex(i => i.hover === 'green')].hover = false
-                    }
-                    return prev
-                  })
-                }
-              }
-            }}>
-              makeLine
-            </button>
-          </div>
+          {character === 'lineMan' && <LineManUI turn={turn} setTurn={setTurn} enemyBoardState={enemyBoardState}
+            enemyTargets={enemyTargets} enemyBoatPlacements={enemyBoatPlacements} setEnemyBoatPlacements={setEnemyBoatPlacements}
+            setEnemyBoardState={setEnemyBoardState} socket={socket} cookies={cookies} setTurnNumber={setTurnNumber} turnNumber={turnNumber} />
           }
           {Object.values(enemyBoardState).some(i => i.hover === 'protected') && <button onClick={() => {
-            let newBoardState = { ...boardState }
-            for (const square in newBoardState) {
-              if (newBoardState[square].state === 'mine') newBoardState[square].state = null
-              if (newBoardState[square].hover) newBoardState[square].hover = false
+            setTurn(false)
+            sessionStorage.setItem('turn', JSON.stringify(false))
+            if (wasBluffing === 'yes') {
+              alert('bluff called')
+              let dbx = JSON.stringify(boardState)
+              let newBoardState = JSON.parse(dbx)
+              for (const square in newBoardState) {
+                if (newBoardState[square].state === 'mine') newBoardState[square].state = null
+                if (newBoardState[square].hover) newBoardState[square].hover = false
+              }
+              socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: newBoardState }))
+            } else {
+              socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: null }))
+              setTurnNumber(prev => prev - 3)
+              alert('wasn\'t bluffing')
             }
-            socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: newBoardState }))
           }}>call bluff</button>}
         </> : cookies?.user?.state === 'matching' ? <>
-          <button onClick={() => {
-            sessionStorage.setItem('character', 'orangeMan')
-            setCharacter('orangeMan')
-          }}>orange mode</button>
-          <button onClick={() => {
-            sessionStorage.setItem('character', 'lineMan')
-            setCharacter('lineMan')
-          }}>line mode</button>
-          <button onClick={() => {
-            sessionStorage.setItem('character', 'cornerMan')
-            setCharacter('cornerMan')
-          }}>corner mode</button>
-
-          <form onSubmit={(e) => setInformation(e)}>
-            <label htmlFor='name'>name</label>
-            {cookies.user?.name !== 'noName' ? <p>{cookies.user.name} wins/losses:{cookies.user.wins} / {cookies.user.losses}</p> : <input name='name' />}
-            <label htmlFor='boat1'>destroyer</label>
-            <input name='boat1' defaultValue={boatNames[0]} />
-            <label htmlFor='boat2'>cruiser</label>
-            <input name='boat2' defaultValue={boatNames[1]} />
-            <label htmlFor='boat3'>battleship</label>
-            <input name='boat3' defaultValue={boatNames[2]} />
-            <label htmlFor='boat4'>carrier</label>
-            <input name='boat4' defaultValue={boatNames[3]} />
-            <button>submit</button>
-          </form>
-        </> : <>
-          <div>
-            <header>
-              {gameProgress === 'winning screen' ? <h2>you have won! congragurblations</h2> :
-                <h2>you have lost! how embarrasing!</h2>}
-            </header>
-            <p>well wasn't that fun! <button onClick={() => {
-              setCookie('user', { ...cookies.user, state: 'matching' })
-              setGameProgress('preplacement')
-              console.log(gameProgress)
-              socket.send(JSON.stringify({ id: cookies.user.id, reset: true }))
-            }}>Back for more?</button></p>
-          </div>
-
-        </>}
+          <Customization setCharacter={setCharacter} boatNames={boatNames} setBoatNames={setBoatNames} setCookie={setCookie} cookies={cookies} />
+        </> : <Endofgame gameProgress={gameProgress} setCookie={setCookie} cookies={cookies} setGameProgress={setGameProgress} socket={socket} />}
       </div>
     </div>
   );

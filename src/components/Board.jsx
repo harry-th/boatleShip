@@ -10,7 +10,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
   gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie,
-  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber, turnTime }) => {
+  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber, turnTime, dataSent, setCharges }) => {
 
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
@@ -30,7 +30,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
           let freeShot
           if (enemyBoardState[shot] === 'missed') return
           if (turnNumber !== 4) setTurn(false)
-          if (turnNumber === 4) {
+          if (turnNumber >= 4) {
             setTurnNumber(0)
             freeShot = true
           }
@@ -50,7 +50,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
             setBoardState
           ) : character === 'lineMan' && selecting ?
-            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacement)
+            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacement, setCharges)
             : shotLogic(callback,
               index, enemyTargets, enemyBoardState,
               setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
@@ -90,7 +90,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       {player === 'ai' ? enemyName : cookies.user.name}
       {(player === 'player') && turnTime}
 
-      <button onClick={() => { console.log(enemyBoatPlacements) }}>print</button>
+      <button onClick={() => { console.log(dataSent, gameProgress, boatPlacements) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>
