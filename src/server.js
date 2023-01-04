@@ -5,20 +5,20 @@ const wss = new WebSocket.Server({ port: 8080 });
 const groups = {}
 const wscodes = {}
 let boats = {}
-let names = {}
+let info = {}
 
-const findGroup = (groups, id, name) => {
+const findGroup = (groups, id, name, character) => {
     for (const group in groups) {
         if (!groups[group]) {
-            names[id] = name
+            info[id] = { name, character }
             groups[group] = id
             groups[id] = group
-            wscodes[id].send(JSON.stringify({ state: 'matched', name: names[group] }))
-            wscodes[group].send(JSON.stringify({ state: 'matched', name: names[id] }))
+            wscodes[id].send(JSON.stringify({ state: 'matched', name: info[group].name, character: info[group].character }))
+            wscodes[group].send(JSON.stringify({ state: 'matched', name: info[id].name, character: info[id].character }))
             return
         }
     }
-    names[id] = name
+    info[id] = { name, character }
     groups[id] = null
     return
 }
@@ -71,14 +71,14 @@ wss.on('connection', (ws, req) => {
         if (message.state === 'matching') {
             if (Object.keys(groups).includes(message.id)) return
             else {
-                findGroup(groups, message.id, message.name)
+                findGroup(groups, message.id, message.name, message.character)
             }
         } else if (message.state === 'matched') {
             console.log('attempt get boats')
 
             if (Object.keys(boats).includes(groups[message.id])) {
 
-                wscodes[message.id].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[groups[message.id]] }))
+                wscodes[message.id].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[groups[message.id]], turn: false }))
                 wscodes[groups[message.id]].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[message.id], turn: true }))
                 delete boats[groups[message.id]]
                 delete boats[message.id]

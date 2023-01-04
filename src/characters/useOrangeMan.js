@@ -73,25 +73,27 @@ let useOrangeMan = () => {
         socket.send(JSON.stringify({ dataType: 'shot', index: retaliation, id: cookies.user.id, bluffArray: bluffShots }))
     }
     const OrangeManUI = ({ turn, setTurn, socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState }) => {
-        return (<div>
-            <button onClick={() => {
-                if (bluffing === null) return
-                if (turn) {
-                    if (bluffing !== 'ready') {
-                        setBluffing(prev => {
-                            sessionStorage.setItem('bluffing', JSON.stringify(!prev))
-                            return !prev
-                        })
+        return (
+            <div>
+                <button onClick={() => {
+                    if (bluffing === null) return
+                    if (turn) {
+                        if (bluffing !== 'ready') {
+                            setBluffing(prev => {
+                                sessionStorage.setItem('bluffing', JSON.stringify(!prev))
+                                return !prev
+                            })
+                        }
+                        if (bluffing === 'ready') {
+                            setTurn(false)
+                            setBluffing(null)
+                            fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
+                        }
                     }
-                    if (bluffing === 'ready') {
-                        setTurn(false)
-                        setBluffing(null)
-                        fireBluffShots(socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState)
-                    }
-                }
-            }}>{bluffing === 'ready' ? 'fire Retaliation' :
-                bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
-        </div>)
+                }}>{bluffing === 'ready' ? 'fire Retaliation' :
+                    bluffing === null ? 'fired' : bluffing ? 'stop Bluffing ' : 'start Bluffing'}</button>
+            </div>
+        )
     }
     return { bluffing, setBluffing, bluffShots, setBluffShots, orangeShot, fireBluffShots, OrangeManUI }
 }

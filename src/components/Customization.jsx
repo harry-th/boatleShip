@@ -23,27 +23,30 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                 <div onClick={() => {
                     sessionStorage.setItem('character', 'orangeMan')
                     setCharacter('orangeMan')
-                    setDisplay('name')
+                    if (cookies.user.name === 'noName') setDisplay('name')
+                    else setDisplay('done')
                 }}>orange mode</div>
                 <div onClick={() => {
                     sessionStorage.setItem('character', 'lineMan')
                     setCharacter('lineMan')
-                    setDisplay('name')
+                    if (cookies.user.name === 'noName') setDisplay('name')
+                    else setDisplay('done')
                 }}>line mode</div>
                 <div onClick={() => {
                     sessionStorage.setItem('character', 'cornerMan')
                     setCharacter('cornerMan')
-                    setDisplay('name')
+                    if (cookies.user.name === 'noName') setDisplay('name')
+                    else setDisplay('done')
                 }}>corner mode</div>
             </div>}
             <div onClick={() => {
                 setName(null)
                 setDisplay('name')
-            }}> {name || cookies.user.name} {cookies.user.name !== 'noName' && <span> wins/losses: {cookies.user.wins} / {cookies.user.losses}</span>}</div>
+            }}> {name || cookies.user.name !== 'noName' ? cookies.user.name : null} {cookies.user.name !== 'noName' && <span> wins/losses: {cookies.user.wins} / {cookies.user.losses}</span>}</div>
             <div className={styles.boatform}>
                 {(name && display === 'name') && <p>choose Boat names?</p>}
                 <form onSubmit={(e) => setInformation(e)}>
-                    {(display === 'name') && <div>
+                    {(display === 'name' && cookies.user.name === 'noName') && <div>
                         <div>
                             <label htmlFor='name'>name</label>
                         </div>
@@ -52,7 +55,7 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                     </div>}
                     {display === 'boats' && <div className={styles.boatfields}>
                         <h4>Choose your Boat Names:</h4>
-                        <input name='name' value={name} hidden />
+                        <input name='name' value={name || cookies.user.name} hidden />
                         <label htmlFor='boat1'>destroyer</label>
                         <input name='boat1' defaultValue={boatNames[0]} />
                         <label htmlFor='boat2'>cruiser</label>
@@ -64,11 +67,22 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                         <button>submit</button> </div>}
                 </form>
             </div>
-            {display === 'done' && <button onClick={() => {
-                console.log(cookies)
-                setVsAi(false)
-                socket.send(JSON.stringify({ ...cookies.user }))
-            }}>find game</button>}
+            {(cookies.user.name !== 'noName' && character) && <div>
+                {display === 'done' && <div>
+                    <button onClick={() => {
+                        console.log(cookies)
+                        setVsAi(false)
+                        socket.send(JSON.stringify({ ...cookies.user, character }))
+                    }}>find game</button>
+                    <button onClick={() => {
+                        setDisplay('boats')
+                    }}>rename boats
+                    </button>
+                    <button onClick={() => {
+                        setCharacter('none')
+                    }}>change character
+                    </button>
+                </div>}</div>}
         </div>)
 }
 export default Customization

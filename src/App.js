@@ -9,6 +9,8 @@ import useLineMan from './characters/useLineMan';
 import Customization from './components/Customization';
 import Endofgame from './components/Endofgame';
 import Callbluffbutton from './components/Callbluffbutton';
+import Log from './components/Log';
+import styles from './styles/App.module.css'
 let randomstring = require("randomstring");
 const jose = require('jose');
 
@@ -17,6 +19,8 @@ function App() {
   const [character, setCharacter] = useState(sessionStorage.getItem('character') || 'none')
   let { bluffing, setBluffing, orangeShot, setBluffShots, OrangeManUI } = useOrangeMan()
   let { setLastShots, selecting, setSelecting, setSelection, setCharges, LineManUI } = useLineMan()
+
+  const [messages, setMessages] = useState([])
 
   const [cookies, setCookie, removeCookie] = useCookies(['user']);
   const [socket, setSocket] = useState(null);
@@ -56,6 +60,7 @@ function App() {
       setTargets([])
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
       setTurnNumber(0)
+      setMessages([])
       // setTurnTime(30)
       setEnemyBoatPlacements([])
       setEnemyBoats([2, 3, 4, 5])
@@ -209,9 +214,17 @@ function App() {
       let message = JSON.parse(event.data);
       console.log(message)
       if (message.turn) {
+
+        setMessages(prev => {
+          return [...prev, 'you will go second, freeshot 1 turn earlier...']
+        })
         setTurn(false)
         sessionStorage.setItem('turn', JSON.stringify(false))
         setTurnNumber(prev => prev + 1)
+      } else if (message.turn === false) {
+        setMessages(prev => {
+          return [...prev, 'Game start! you go first!']
+        })
       }
       if (message.dataType === 'forfeit') {
         setCookie('user', { ...cookies.user, state: 'gameover', wins: cookies.user.wins + 1 })
@@ -228,15 +241,25 @@ function App() {
         setWasBluffing('no')
         sessionStorage.setItem('wasBluffing', 'no')
       }
+
       if (message.callBluff) {
+        setMessages(prev => {
+          return [...prev, 'they tried to call your bluff and failed']
+        })
         setTurn(true)
         sessionStorage.setItem('turn', JSON.stringify(true))
         if (bluffing) {
+          setMessages(prev => {
+            return [...prev, 'your bluff was called! Your retaliation has been disarmed but your shots are now']
+          })
           setBluffing(null)
           setEnemyBoardState(message.boardState)
         }
       }
       if (message.bluffArray) { //comes from shot before realitation
+        setMessages(prev => {
+          return [...prev, 'They were bluffing! And now you have been retaliated upon!']
+        })
         let newBoardState = { ...boardState }
         let newBoatPlacements = { ...boatPlacements }
         for (const bluff of message.bluffArray) {
@@ -252,6 +275,9 @@ function App() {
         setBoatPlacements(newBoatPlacements)
       }
       if (message.state === 'matched') {
+        setMessages(prev => {
+          return [...prev, `matched with ${message.name} playing as ${message.character}!`]
+        })
         setEnemyName(message.name)
         sessionStorage.setItem('enemyName', message.name)
         setCookie('user', { ...cookies.user, state: 'matched' })
@@ -310,15 +336,23 @@ function App() {
             newState[ind] = { id: ind, state, hover: false }
             setBoardState(newState)
           }
+          setMessages(prev => {
+            return [...prev, `They fired a volley of shots at ${message.index.join(', ')}!`]
+          })
         } else {
           hitOrMiss = (targets).includes(Number(message.index))
           let state = hitOrMiss ? 'hit' : 'missed'
           newState[message.index] = { id: message.index, state, hover: false }
           setBoardState(newState)
+          setMessages(prev => {
+            if (hitOrMiss) return [...prev, `They fired at ${message.index} and it was a ${state}!`]
+            else return [...prev, `They fired at ${message.index} but it ${state}!`]
+          })
         }
         sessionStorage.setItem('boardState', JSON.stringify(newState))
         if (hitOrMiss) {
           alert('you got HIT!')
+
           const allHits = Object.values(newState).filter((item) => {
             return item.state === 'hit'
           }).map((el) => Number(el.id))
@@ -327,6 +361,9 @@ function App() {
               setBoatPlacements(prev => {
                 prev[boat].sunk = true
                 return { ...prev }
+              })
+              setMessages(prev => {
+                return [...prev, `They sunk your ${boatPlacements[boat].name}`]
               })
               alert(`${boatPlacements[boat].name} was sunk!`)
             }
@@ -396,8 +433,8 @@ function App() {
   const { generateTargets } = useAi()
 
   return (
-    <div className="App">
-      <button onClick={() => {
+    <div className={styles.app}>
+      {gameProgress === 'preplacement' && <button onClick={() => {
         setVsAi(true)
         setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
         setTurn(true);
@@ -410,7 +447,6 @@ function App() {
         setTurnNumber(0)
         setEnemyName(null)
         setGameProgress('placement')
-        // setTurnTime(30)
         setEnemyBoats([2, 3, 4, 5])
         setEnemyBoardState(generateBoard())
         setIntCode(null)
@@ -427,11 +463,10 @@ function App() {
         setCharges(4)
 
         sessionStorage.clear()
-        // sessionStorage.setItem('character', character)
         clearInterval(intCode)
         clearTimeout(timeCode)
         clearTimeout(AfkTimeCode)
-      }}>play Ai</button>
+      }}>play Ai</button>}
       <button onClick={() => {
         removeCookie('user')
 
@@ -454,9 +489,9 @@ function App() {
         sessionStorage.clear()
 
       }}>remove cookie</button>
-      <div style={{ marginTop: '30px', marginBottom: '30px' }}>WELCOME TO BATTLESHIP</div>
+      <div className={styles.title}>WELCOME TO BATTLESHIP</div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+      <div className={styles.boardcontainer}>
         {(cookies?.user?.state === 'matched' || vsAi || cookies?.user?.state === 'ongoing') ? <>
           {gameProgress === 'placement' && <button
             onClick={() => { orientation === 'v' ? setOrientation('h') : setOrientation('v') }}>
@@ -482,17 +517,24 @@ function App() {
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
             setTurnNumber={setTurnNumber} setCharges={setCharges} />
-          {turnNumber}
-          {character === 'orangeMan' && <OrangeManUI turn={turn} setTurn={setTurn} socket={socket}
-            enemyBoardState={enemyBoardState} enemyTargets={enemyTargets} cookies={cookies}
-            setEnemyBoardState={setEnemyBoardState} />
-          }
-          {character === 'lineMan' && <LineManUI turn={turn} setTurn={setTurn} enemyBoardState={enemyBoardState}
-            enemyTargets={enemyTargets} enemyBoatPlacements={enemyBoatPlacements} setEnemyBoatPlacements={setEnemyBoatPlacements}
-            setEnemyBoardState={setEnemyBoardState} socket={socket} cookies={cookies} setTurnNumber={setTurnNumber} turnNumber={turnNumber} />
-          }
-          {Object.values(enemyBoardState).some(i => i.hover === 'protected') && <Callbluffbutton setTurn={setTurn}
-            wasBluffing={wasBluffing} boardState={boardState} cookies={cookies} socket={socket} setTurnNumber={setTurnNumber} />}
+          <div>
+            <div className={styles.logcontainer}>
+              <Log messages={messages} />
+            </div>
+            <div className={styles.charcontainer}>
+              {turnNumber < 4 && turnNumber > 0 ? <p>{4 - turnNumber} turns until your freeShot</p> : turnNumber !== 0 ? <p>Take your free shot!</p> : null}
+              {character === 'orangeMan' && <OrangeManUI turn={turn} setTurn={setTurn} socket={socket}
+                enemyBoardState={enemyBoardState} enemyTargets={enemyTargets} cookies={cookies}
+                setEnemyBoardState={setEnemyBoardState} />
+              }
+              {character === 'lineMan' && <LineManUI turn={turn} setTurn={setTurn} enemyBoardState={enemyBoardState}
+                enemyTargets={enemyTargets} enemyBoatPlacements={enemyBoatPlacements} setEnemyBoatPlacements={setEnemyBoatPlacements}
+                setEnemyBoardState={setEnemyBoardState} socket={socket} cookies={cookies} setTurnNumber={setTurnNumber} turnNumber={turnNumber} />
+              }
+              {Object.values(enemyBoardState).some(i => i.hover === 'protected') && <Callbluffbutton setTurn={setTurn}
+                wasBluffing={wasBluffing} boardState={boardState} cookies={cookies} socket={socket} setTurnNumber={setTurnNumber} />}
+            </div>
+          </div>
         </> : cookies?.user?.state === 'matching' ? <>
           <Customization character={character} setCharacter={setCharacter} boatNames={boatNames}
             setBoatNames={setBoatNames} setCookie={setCookie} cookies={cookies}
