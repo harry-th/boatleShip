@@ -14,7 +14,7 @@ let randomstring = require("randomstring");
 const jose = require('jose');
 
 function App() {
-
+  console.log(process.env.REACT_APP_secret_access_codes)
   const [character, setCharacter] = useState(sessionStorage.getItem('character') || 'none')
   let { bluffing, setBluffing, orangeShot, setBluffShots, OrangeManUI } = useOrangeMan()
   let { setLastShots, selecting, setSelecting, setSelection, setCharges, LineManUI } = useLineMan()
@@ -239,10 +239,10 @@ function App() {
       // }
       if (message.bluffing) {
         setWasBluffing('yes')
-        sessionStorage.setItem('wasBluffing', 'yes')
+        // sessionStorage.setItem('wasBluffing', 'yes')
       } else {
         setWasBluffing('no')
-        sessionStorage.setItem('wasBluffing', 'no')
+        // sessionStorage.setItem('wasBluffing', 'no')
       }
 
       if (message.callBluff) {
