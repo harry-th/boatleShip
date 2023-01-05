@@ -4,10 +4,10 @@ let otherStuff = () => {
     const jose = require('jose');
     let doIt = async () => {
         const secret = new TextEncoder().encode(
-            process.env.SECRET_ACCESS_TOKEN,
+            'bimbdab',
         )
         console.log({ secret })
-        console.log(process.env.REACT_APP_secret_access_code)
+        console.log()
 
         const jwt = await new jose.SignJWT({ 'hello': true })
             .setProtectedHeader({ alg: 'HS256' })
