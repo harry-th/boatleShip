@@ -1,0 +1,59 @@
+.logcontainer {
+  overflow: scroll;
+  width: 400px;
+  height: 200px;
+  border: 4px solid black;
+  border-bottom: 2px;
+}
+.logcontainer p {
+  float: left;
+  margin: 6px;
+  margin-bottom: 0px;
+}
+
+.usercontainer {
+  width: 400px;
+  height: 200px;
+  border: 4px solid black;
+  border-top: 0px;
+}
+.usercontainer .turncontainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 4px solid black;
+  border-left: 0px;
+  border-right: 0px;
+}
+.usercontainer .turncontainer .turnIndicator {
+  margin: 3px;
+  font-size: 0px;
+  width: 20px;
+  height: 20px;
+  border: 2px solid black;
+}
+.usercontainer .turncontainer .turnIndicatorTrue {
+  color: green;
+  background-color: green;
+}
+.usercontainer .turncontainer .turnIndicatorFalse {
+  color: red;
+  background-color: red;
+}
+.usercontainer .turncontainer .freeshotinformation {
+  margin: 5px;
+}
+.usercontainer .turncontainer .freeshotinformation p {
+  width: 100%;
+  float: left;
+  margin: 0px;
+}
+.usercontainer .charcontainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.usercontainer .charcontainer button {
+  width: 75px;
+  height: 75px;
+}/*# sourceMappingURL=Dashboard.module.css.map */

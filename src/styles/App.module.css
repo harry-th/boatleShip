@@ -8,19 +8,4 @@
 .app .boardcontainer {
   display: flex;
   justify-content: space-evenly;
-}
-.app .logcontainer {
-  overflow: scroll;
-  width: 400px;
-  height: 200px;
-  border: 4px solid black;
-}
-.app .charcontainer {
-  width: 400px;
-  height: 200px;
-  border: 4px solid black;
-}
-.app .charcontainer div {
-  display: flex;
-  flex-direction: column;
 }/*# sourceMappingURL=App.module.css.map */

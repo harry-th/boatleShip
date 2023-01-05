@@ -8,19 +8,4 @@
     display: flex;
     justify-content: space-evenly;
   }
-  .logcontainer {
-    overflow: scroll;
-    width: 400px;
-    height: 200px;
-    border: 4px solid black;
-  }
-  .charcontainer {
-    width: 400px;
-    height: 200px;
-    border: 4px solid black;
-    div {
-      display: flex;
-      flex-direction: column;
-    }
-  }
 }
