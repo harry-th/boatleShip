@@ -28,9 +28,7 @@ wss.on('connection', (ws, req) => {
     ws.on('message', (message) => {
 
         message = JSON.parse(message)
-        // console.log({ groups })
         if (message?.id) wscodes[message?.id] = ws
-        console.log(message)
         if (message.turnOrder) {
             return
         }
@@ -41,7 +39,6 @@ wss.on('connection', (ws, req) => {
             return
         }
         if (message.forfeit) {
-            console.log('forfeit')
             if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'forfeit' }))
             delete groups[message.id]
             delete groups[groups[message.id]]
@@ -74,20 +71,13 @@ wss.on('connection', (ws, req) => {
                 findGroup(groups, message.id, message.name, message.character)
             }
         } else if (message.state === 'matched') {
-            console.log('attempt get boats')
-
             if (Object.keys(boats).includes(groups[message.id])) {
-
                 wscodes[message.id].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[groups[message.id]], turn: false }))
                 wscodes[groups[message.id]].send(JSON.stringify({ state: 'ongoing', boatPlacements: boats[message.id], turn: true }))
                 delete boats[groups[message.id]]
                 delete boats[message.id]
             }
-        } else if (message.state === 'ongoing') {
-            console.log(message.index)
         }
-        //     const data = JSON.parse(message);
-        //     connections.forEach((connection) => connection.send(data.message));
     });
 });
 

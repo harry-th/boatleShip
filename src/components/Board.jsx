@@ -90,7 +90,6 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       {player === 'ai' ? enemyName : cookies.user.name}
       {(player === 'player') && turnTime}
 
-      <button onClick={() => { console.log(dataSent, gameProgress, boatPlacements) }}>print</button>
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>

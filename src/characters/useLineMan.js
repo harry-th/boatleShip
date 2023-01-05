@@ -40,9 +40,9 @@ const useLineMan = () => {
                         enemyBoardState[i].state === 'selectable' || enemyBoardState[i].state === 'hit' || enemyBoardState[i].hover === 'protected') {
                         if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected') {
                             let oldState = boardState[i].state
-                            console.log(i, 'this')
+
                             setBoardState(prev => {
-                                console.log(prev[i])
+
                                 prev[i].state = 'hit'
                                 return { ...prev }
                             })
@@ -77,14 +77,14 @@ const useLineMan = () => {
                     end = index
                 }
                 for (let i = start + 10; i < end; i += 10) {
-                    console.log(i)
+
                     if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected' ||
                         enemyBoardState[i].state === 'selectable' || enemyBoardState[i].state === 'hit' || enemyBoardState[i].hover === 'protected') {
                         if (boardState[i].state === 'missed' || boardState[i].state === 'hit' || boardState[i].hover === 'protected') {
                             let oldState = boardState[i].state
-                            console.log(i, 'this')
+
                             setBoardState(prev => {
-                                console.log(prev[i])
+
                                 prev[i].state = 'hit'
                                 return { ...prev }
                             })
@@ -112,7 +112,7 @@ const useLineMan = () => {
             } else {
                 return
             }
-            console.log(result)
+
             setEnemyBoardState(prev => {
                 prev[selection[0]].hover = false
                 return prev
@@ -195,7 +195,7 @@ const useLineMan = () => {
 
                             let newState = { ...enemyBoardState }
                             for (const shot of lastShots) {
-                                console.log(shot)
+
                                 let hitOrMiss = (enemyTargets).includes(Number(shot))
                                 let state = hitOrMiss ? 'hit' : 'missed'
                                 if (hitOrMiss && newState[shot].state !== 'hit') {
