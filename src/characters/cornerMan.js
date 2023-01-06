@@ -6,10 +6,13 @@ let cornerMan = () => {
         let positions = Array(num).fill().map((item, i) => {
             return orientation === 'h' ? index + i : index + i * 10
         })
+        console.log(positions)
         if (positions.some((pos) => targets.includes(pos))) return
         for (let i = 0; i < positions.length; i++) {
-            if (positions[i] > 100) positions[i] = positions[i] - 99
+            if (positions[i] > 99) positions[i] = positions[i] - 100
         }
+        console.log(positions)
+
         // if (orientation === 'h' && (Math.floor(positions[positions.length - 1] / 10) * 10) - (Math.floor(positions[0] / 10) * 10) > 0) return
         // if (orientation === 'v' && positions[positions.length - 1] > 99) return
         if (boats.length === 1 && vsAi) {
@@ -74,7 +77,7 @@ let cornerMan = () => {
                 coords.push(orientation === 'h' ? index + i : index + i * 10)
             }
             for (let i = 0; i < coords.length; i++) {
-                if (coords[i] > 99) coords[i] = coords[i] - 99
+                if (coords[i] > 99) coords[i] = coords[i] - 100
             }
             let newBoardState = { ...boardState }
             for (let i = 0; i < coords.length; i++) {
