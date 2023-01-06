@@ -247,8 +247,9 @@ function App() {
   //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://3.14.176.234:8080')
-    // new WebSocket('ws://localhost:8080/ws');
+    const newSocket = new WebSocket('ws://localhost:8080/ws');
+    // new WebSocket('ws://3.14.176.234:8080')
+
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
       if (message.turn) {
@@ -431,6 +432,13 @@ function App() {
   useEffect(() => {
     sessionStorage.setItem('turnNumber', JSON.stringify(turnNumber))
   }, [turnNumber])
+  useEffect(() => {
+    if ((4 - enemyTurnNumber % 4) !== 1) setEnemyFreeShotMiss(prev => {
+      if (prev > 0) return prev - 1
+      else return 0
+    }
+    )
+  }, [enemyTurnNumber])
   //send boats after placement
   useEffect(() => {
     if (Object.keys(boatPlacements).length === 4 && !dataSent && gameProgress === 'placement') {
@@ -475,19 +483,16 @@ function App() {
 
   useEffect(() => {
     if (gameProgress === 'ongoing') {
-      // console.log(turnNumber, enemyTurnNumber, ((4 - enemyTurnNumber % 4) !== 1), freeShotMiss)
       setEnemyTurnNumber(prev => {
         if (playerOrder === 'first') {
-          if ((4 - turnNumber + 1 % 4) !== 1) setEnemyFreeShotMiss(prev => prev - 1)
           return (turnNumber + 1)
         }
         if (playerOrder === 'second') {
-          if ((4 - turnNumber - 2 % 4) !== 1) setEnemyFreeShotMiss(prev => prev - 1)
           return (turnNumber - 2)
         }
       })
     }
-  }, [turnNumber, gameProgress, playerOrder,])
+  }, [turnNumber, gameProgress, playerOrder, enemyFreeShotMiss])
 
   const { generateTargets } = useAi()
 

@@ -186,7 +186,6 @@ const useLineMan = () => {
                     }}
 
                     onClick={() => {
-                        console.log(turn && !selecting && charges)
                         if (turn && !selecting && charges) {
                             if (turnNumber && turnNumber % 4 === 0) {
                                 setFreeShotMiss(prev => prev + 1)

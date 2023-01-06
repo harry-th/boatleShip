@@ -36,7 +36,7 @@ const Dashboard = ({
                     </div>
                     <div className={styles.freeshotinformation}>
                         {(turnNumber % 4 !== 0) || !turnNumber ? <p>{(4 - turnNumber % 4) + freeShotMiss * 4} turns until your freeShot</p> : <p>Take your free shot!</p>}
-                        {(4 - enemyTurnNumber % 4 !== 1) || !enemyTurnNumber ? <p>{4 - enemyTurnNumber % 4} turns until your opponent's free shot</p> : <p>{enemyFreeShotMiss && 'they missed'}their free shot</p>}
+                        {(4 - enemyTurnNumber % 4 !== 1) || !enemyTurnNumber ? <p>{4 - enemyTurnNumber % 4} turns until your opponent's free shot</p> : <p>{enemyFreeShotMiss > 0 && 'they missed'}their free shot</p>}
                     </div>
                 </div>
                 <div className={styles.charcontainer}>
