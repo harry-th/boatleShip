@@ -598,6 +598,7 @@ function App() {
             boardState={boardState}
             freeShotMiss={freeShotMiss}
             setFreeShotMiss={setFreeShotMiss}
+            enemyFreeShotMiss={enemyFreeShotMiss}
           />
         </> : cookies?.user?.state === 'matching' ? <>
           <Customization character={character} setCharacter={setCharacter} boatNames={boatNames}
