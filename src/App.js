@@ -32,7 +32,7 @@ function App() {
   const [boats, setBoats] = useState(sessionStorage.getItem('boats') ? JSON.parse(sessionStorage.getItem('boats')) : [2, 3, 4, 5])
   const [targets, setTargets] = useState(sessionStorage.getItem('targets') ? JSON.parse(sessionStorage.getItem('targets')) : [])
   const [boatNames, setBoatNames] = useState(['destroyer', 'cruiser', 'battleship', 'carrier'])
-  const [turnNumber, setTurnNumber] = useState(0)
+  const [turnNumber, setTurnNumber] = useState(sessionStorage.getItem('turnNumber') ? JSON.parse(sessionStorage.getItem('turnNumber')) : 0)
   const [turnTime, setTurnTime] = useState(sessionStorage.getItem('turnTime') ? JSON.parse(sessionStorage.getItem('turnTime')) : 60)
   const [playerOrder, setPlayerOrder] = useState(sessionStorage.getItem('playerOrder') || null)
 
@@ -48,28 +48,10 @@ function App() {
   const [AfkTimeCode, setAfkTimeCode] = useState(sessionStorage.getItem('AfkTimeCode') || null)
 
   let [enemyTurnNumber, setEnemyTurnNumber] = useState(turnNumber)
-  let [turnDisplacement, setTurnDisplacement] = useState(sessionStorage.getItem('turnDisplacement') ? JSON.parse(sessionStorage.getItem('turnDisplacement')) : 0)
+  let [freeShotMiss, setFreeShotMiss] = useState(sessionStorage.getItem('freeShotMiss') ? JSON.parse(sessionStorage.getItem('freeShotMiss')) : 0)
+  let [enemyFreeShotMiss, setEnemyFreeShotMiss] = useState(sessionStorage.getItem('enemyFreeShotMiss') ? JSON.parse(sessionStorage.getItem('enemyFreeShotMiss')) : 0)
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
-  // useEffect(() => {
-  //   const ws = new WebSocket('ws://3.14.176.234:8080');
-
-  //   ws.onopen = () => {
-  //     console.log('Connected to the WebSocket server');
-  //   };
-
-  //   ws.onmessage = (message) => {
-  //     console.log(`Received message: ${message}`);
-  //   }
-  //   ws.onerror = (error) => {
-  //     console.error(`Error: ${error.message}`);
-  //   };
-  // }, [])
-
-
-
-
-
 
 
 
@@ -77,6 +59,8 @@ function App() {
   useEffect(() => {
     if (cookies?.user?.state === 'gameover') {
       setTurn(true);
+      setFreeShotMiss(0)
+      setPlayerOrder(null)
       setVsAi(false)
       setOrientation('h')
       setBoatPlacements([])
@@ -160,13 +144,49 @@ function App() {
         if (prev[boat].positions.every((b) => allHits.includes(b))) {
           prev[boat].sunk = true
           setMessages(prev => {
-            return [...prev, `you have sunk ${boat.name}`]
+            return [...prev, `you have sunk their ${boat}`]
           })
         }
       }
       return prev
     })
   }, [enemyBoardState])
+
+  useEffect(() => {
+    if (sessionStorage.getItem('wasBluffing') && gameProgress === 'ongoing' && !wasBluffing) {
+      const getEncryptBluff = async () => {
+        try {
+          const secret = new TextEncoder().encode(
+            process.env.REACT_APP_secret_access_code,
+          )
+          let cryptoBoatPlacements = sessionStorage.getItem('wasBluffing')
+          const { payload } = await jose.jwtVerify(cryptoBoatPlacements, secret)
+          setWasBluffing(payload.wasBluffing)
+        } catch (error) {
+          console.log(error)
+        }
+
+      }
+      getEncryptBluff()
+    }
+    if (!sessionStorage.getItem('wasBluffing') && gameProgress === 'ongoing' && wasBluffing) {
+      const setEncryptBluff = async () => {
+        const secret = new TextEncoder().encode(
+          process.env.REACT_APP_secret_access_code,
+        )
+        try {
+          const jwt = await new jose.SignJWT({ wasBluffing })
+            .setProtectedHeader({ alg: 'HS256' })
+            .sign(secret)
+          sessionStorage.setItem('wasBluffing', jwt)
+        } catch (error) {
+          console.log(error)
+        }
+      }
+      setEncryptBluff()
+    }
+  }, [wasBluffing, gameProgress])
+
   //win conditions, storage protection, encryption of enemy boats
   useEffect(() => {
     if (sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing' && Array.isArray(enemyBoatPlacements)) {
@@ -215,7 +235,6 @@ function App() {
       setGameProgress('winning screen')
     }
     const handleChangeStorage = () => {
-
       socket.send(JSON.stringify({ id: cookies.user.id, forfeit: true }))
       setCookie('user', { ...cookies.user, state: 'gameover', losses: cookies.user.losses + 1 })
       setGameProgress('losing screen')
@@ -265,9 +284,9 @@ function App() {
       }
 
       if (message.callBluff) {
-        setTurnDisplacement(prev => {
-          prev += 3
-          sessionStorage.setItem('turnDisplacement', JSON.stringify(prev))
+        setEnemyFreeShotMiss(prev => {
+          prev += 1
+          sessionStorage.setItem('enemyFreeShotMiss', JSON.stringify(prev))
           return prev
         })
         setMessages(prev => {
@@ -408,6 +427,10 @@ function App() {
       }
     };
   }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements, setLastShots])
+  //updates turnNumber
+  useEffect(() => {
+    sessionStorage.setItem('turnNumber', JSON.stringify(turnNumber))
+  }, [turnNumber])
   //send boats after placement
   useEffect(() => {
     if (Object.keys(boatPlacements).length === 4 && !dataSent && gameProgress === 'placement') {
@@ -446,15 +469,25 @@ function App() {
       sessionStorage.removeItem('afkTimecode')
     }
   }, [turn, AfkTimeCode, cookies, setCookie])
+
+
   //turn// freeshot tracker 
+
   useEffect(() => {
     if (gameProgress === 'ongoing') {
+      // console.log(turnNumber, enemyTurnNumber, ((4 - enemyTurnNumber % 4) !== 1), freeShotMiss)
       setEnemyTurnNumber(prev => {
-        if (playerOrder === 'first') return (turnNumber + 1 > 4 ? 1 : turnNumber + 1 - turnDisplacement)
-        if (playerOrder === 'second') return (turnNumber + 1 > 4 ? 1 : turnNumber - 1 - turnDisplacement)
+        if (playerOrder === 'first') {
+          if ((4 - turnNumber + 1 % 4) !== 1) setEnemyFreeShotMiss(prev => prev - 1)
+          return (turnNumber + 1)
+        }
+        if (playerOrder === 'second') {
+          if ((4 - turnNumber - 2 % 4) !== 1) setEnemyFreeShotMiss(prev => prev - 1)
+          return (turnNumber - 2)
+        }
       })
     }
-  }, [turnNumber, gameProgress, playerOrder, turnDisplacement])
+  }, [turnNumber, gameProgress, playerOrder,])
 
   const { generateTargets } = useAi()
 
@@ -464,6 +497,7 @@ function App() {
         setVsAi(true)
         setEnemyTargets(generateTargets(enemyBoats, setEnemyBoatPlacements))
         setTurn(true);
+        setFreeShotMiss(0)
         setOrientation('h')
         setBoatPlacements([])
         setBoardState(generateBoard())
@@ -541,7 +575,7 @@ function App() {
             enemyTargets={enemyTargets} setEnemyTargets={setEnemyTargets}
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
-            setTurnNumber={setTurnNumber} setCharges={setCharges} />
+            setTurnNumber={setTurnNumber} setCharges={setCharges} freeShotMiss={freeShotMiss} setFreeShotMiss={setFreeShotMiss} />
           <Dashboard
             messages={messages}
             gameProgress={gameProgress}
@@ -562,6 +596,8 @@ function App() {
             setEnemyBoatPlacements={setEnemyBoatPlacements}
             setTurnNumber={setTurnNumber}
             boardState={boardState}
+            freeShotMiss={freeShotMiss}
+            setFreeShotMiss={setFreeShotMiss}
           />
         </> : cookies?.user?.state === 'matching' ? <>
           <Customization character={character} setCharacter={setCharacter} boatNames={boatNames}

@@ -10,7 +10,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
   gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie,
-  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber, turnTime, dataSent, setCharges }) => {
+  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber, turnTime, dataSent, setCharges, freeShotMiss, setFreeShotMiss }) => {
 
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
@@ -29,12 +29,20 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
         : (shot, shotData) => {
           let freeShot
           if (enemyBoardState[shot] === 'missed') return
-          if (turnNumber !== 4) setTurn(false)
-          if (turnNumber >= 4) {
-            setTurnNumber(0)
-            freeShot = true
+          else if (!turnNumber || turnNumber % 4 !== 0) {
+            setTurn(false)
+            sessionStorage.setItem('turn', JSON.stringify(false))
+          } else if (turnNumber && turnNumber % 4 === 0) {
+            if (!freeShotMiss) {
+              setFreeShotMiss(prev => prev + 1)
+              freeShot = true
+            }
+            else {
+              setTurn(false)
+              sessionStorage.setItem('turn', JSON.stringify(false))
+              setFreeShotMiss(prev => prev - 1)
+            }
           }
-          sessionStorage.setItem('turn', JSON.stringify(false))
           if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot, ...shotData }))
           else
             socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot }))
@@ -50,7 +58,9 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
             setBoardState
           ) : character === 'lineMan' && selecting ?
-            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacement, setCharges)
+            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets,
+              setBoardState, setEnemyBoardState, setTurn, setSelecting,
+              enemyBoatPlacements, setEnemyBoatPlacement, setCharges, freeShotMiss)
             : shotLogic(callback,
               index, enemyTargets, enemyBoardState,
               setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,

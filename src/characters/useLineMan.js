@@ -5,7 +5,8 @@ const useLineMan = () => {
     const [selection, setSelection] = useState([])
     const [selecting, setSelecting] = useState(sessionStorage.getItem('selecting') ? JSON.parse(sessionStorage.getItem('selecting')) : false)
     const [charges, setCharges] = useState(sessionStorage.getItem('charges') ? JSON.parse(sessionStorage.getItem('charges')) : 4)
-    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacements, setCharges) => {
+    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState,
+        setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacements, setCharges) => {
         if (selection[0] === index) {
             setSelection([])
             setEnemyBoardState(prev => {
@@ -158,7 +159,8 @@ const useLineMan = () => {
         }
     }
     const LineManUI = ({ turn, setTurn, enemyBoardState, enemyTargets,
-        enemyBoatPlacements, setEnemyBoatPlacements, setEnemyBoardState, socket, cookies, turnNumber, setTurnNumber }) => {
+        enemyBoatPlacements, setEnemyBoatPlacements, setEnemyBoardState, socket, cookies, turnNumber,
+        setTurnNumber, freeShotMiss, setFreeShotMiss }) => {
         return (
             <div>
                 charges: {charges}
@@ -185,9 +187,15 @@ const useLineMan = () => {
 
                     onClick={() => {
                         if (turn && !selecting && charges) {
-                            if (turnNumber >= 4) {
-                                setTurnNumber(0)
-                                var freeShot = true
+                            if (turnNumber && turnNumber % 4 === 0) {
+                                setFreeShotMiss(prev => prev + 1)
+
+                                if (!freeShotMiss) var freeShot = true
+                                else {
+                                    setTurn(false)
+                                    sessionStorage.setItem('turn', JSON.stringify(false))
+                                    setFreeShotMiss(prev => prev - 1)
+                                }
                             } else {
                                 setTurn(false)
                                 sessionStorage.setItem('turn', JSON.stringify(false))
@@ -229,16 +237,16 @@ const useLineMan = () => {
                 </button>
                 <button onClick={() => {
                     if (turn && charges) {
-                        let newEnemyBoardState = { ...enemyBoardState }
+                        let newEnemyBoardState = JSON.parse(JSON.stringify(enemyBoardState))
                         for (const square in enemyBoardState) {
                             if (enemyBoardState[square].state === 'missed') newEnemyBoardState[square].state = 'selectable'
                             else if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'
                         }
                         setEnemyBoardState(newEnemyBoardState)
                         setSelecting(prev => {
-                            sessionStorage.setItem('selecting', JSON.stringify(!prev))
                             return !prev
                         })
+                        sessionStorage.setItem('selecting', JSON.stringify(!selecting))
                         if (selecting) {
                             setEnemyBoardState(prev => {
                                 if (Object.values(prev).findIndex(i => i.hover === 'green') !== -1) {

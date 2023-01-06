@@ -20,7 +20,10 @@ const Dashboard = ({
     , enemyBoatPlacements
     , setEnemyBoatPlacements
     , setTurnNumber
-    , boardState }) => {
+    , boardState
+    , freeShotMiss
+    , setFreeShotMiss
+    , enemyFreeShotMiss }) => {
     return (
         <div className={styles.dashboard}>
             <div className={styles.logcontainer}>
@@ -32,8 +35,8 @@ const Dashboard = ({
                         hello
                     </div>
                     <div className={styles.freeshotinformation}>
-                        {turnNumber < 4 ? <p>{4 - turnNumber} turns until your freeShot</p> : <p>Take your free shot!</p>}
-                        {enemyTurnNumber < 4 ? <p>{4 - enemyTurnNumber} turns until your opponent's free shot</p> : <p>their free shot</p>}
+                        {(turnNumber % 4 !== 0) || !turnNumber ? <p>{(4 - turnNumber % 4) + freeShotMiss * 4} turns until your freeShot</p> : <p>Take your free shot!</p>}
+                        {(4 - enemyTurnNumber % 4 !== 1) || !enemyTurnNumber ? <p>{4 - enemyTurnNumber % 4} turns until your opponent's free shot</p> : <p>{enemyFreeShotMiss && 'they missed'}their free shot</p>}
                     </div>
                 </div>
                 <div className={styles.charcontainer}>
@@ -46,7 +49,7 @@ const Dashboard = ({
                         setEnemyBoardState={setEnemyBoardState} socket={socket} cookies={cookies} setTurnNumber={setTurnNumber} turnNumber={turnNumber} />
                     }
                     {Object.values(enemyBoardState).some(i => i.hover === 'protected') && <Callbluffbutton setTurn={setTurn}
-                        wasBluffing={wasBluffing} boardState={boardState} cookies={cookies} socket={socket} setTurnNumber={setTurnNumber} />}
+                        wasBluffing={wasBluffing} boardState={boardState} cookies={cookies} socket={socket} setFreeShotMiss={setFreeShotMiss} />}
                 </div>
             </div>
         </div>

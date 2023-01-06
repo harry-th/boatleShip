@@ -1,4 +1,4 @@
-const Callbluffbutton = ({ setTurn, wasBluffing, boardState, cookies, socket, setTurnNumber }) => {
+const Callbluffbutton = ({ setTurn, wasBluffing, boardState, cookies, socket, setFreeShotMiss }) => {
 
     return (<button onClick={() => {
         setTurn(false)
@@ -14,7 +14,7 @@ const Callbluffbutton = ({ setTurn, wasBluffing, boardState, cookies, socket, se
             socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: newBoardState }))
         } else {
             socket.send(JSON.stringify({ id: cookies.user.id, callBluff: true, boardState: null }))
-            setTurnNumber(prev => prev - 3)
+            setFreeShotMiss(prev => prev + 1)
             alert('wasn\'t bluffing')
         }
     }}>call bluff</button>)
