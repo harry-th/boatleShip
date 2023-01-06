@@ -247,8 +247,8 @@ function App() {
   //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://localhost:8080/ws');
-    // new WebSocket('wss://18.117.107.47:8080') 
+    const newSocket = new WebSocket('wss:// 3.14.176.234 :8080')
+    // new WebSocket('ws://localhost:8080/ws');
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
       if (message.turn) {
