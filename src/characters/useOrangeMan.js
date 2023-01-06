@@ -10,7 +10,6 @@ let useOrangeMan = () => {
                 sessionStorage.setItem('bluffShots', JSON.stringify([...prev, index]))
                 return [...prev, index]
             })
-            console.log(bluffShots)
             setBoardState(prev => {
                 let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
                 if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
@@ -51,12 +50,10 @@ let useOrangeMan = () => {
         playerOrAiCallback(index, { bluffing, orange: true })
     }
     const fireBluffShots = (socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState) => {
-        console.log(bluffShots)
 
         let retaliation = []
         let newEnemyBoardState = { ...enemyBoardState }
         let openShots = Object.values({ ...enemyBoardState }).filter(item => item.state === null)
-        console.log({ openShots })
         outerLoop: for (let i = 0; i < bluffShots.length; i++) {
             for (let j = 0; j < 3; j++) {
                 let random = Math.floor(Math.random() * openShots.length)
@@ -69,7 +66,6 @@ let useOrangeMan = () => {
             }
         }
         setEnemyBoardState(newEnemyBoardState)
-        console.log(retaliation)
         socket.send(JSON.stringify({ dataType: 'shot', index: retaliation, id: cookies.user.id, bluffArray: bluffShots }))
     }
     const OrangeManUI = ({ turn, setTurn, socket, enemyBoardState, enemyTargets, cookies, setEnemyBoardState }) => {

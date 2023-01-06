@@ -70,7 +70,6 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
             {(cookies.user.name !== 'noName' && character) && <div>
                 {display === 'done' && <div>
                     <button onClick={() => {
-                        console.log(cookies)
                         setVsAi(false)
                         socket.send(JSON.stringify({ ...cookies.user, character }))
                     }}>find game</button>

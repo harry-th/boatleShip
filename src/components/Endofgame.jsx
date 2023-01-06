@@ -8,7 +8,6 @@ const Endofgame = ({ gameProgress, setCookie, cookies, setGameProgress, socket }
             <p>well wasn't that fun! <button onClick={() => {
                 setCookie('user', { ...cookies.user, state: 'matching' })
                 setGameProgress('preplacement')
-                console.log(gameProgress)
                 socket.send(JSON.stringify({ id: cookies.user.id, reset: true }))
             }}>Back for more?</button></p>
         </div>

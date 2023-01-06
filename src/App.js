@@ -47,7 +47,11 @@ function App() {
   const [timeCode, setTimeCode] = useState(sessionStorage.getItem('timeCode') || null)
   const [AfkTimeCode, setAfkTimeCode] = useState(sessionStorage.getItem('AfkTimeCode') || null)
 
+  let [enemyTurnNumber, setEnemyTurnNumber] = useState(turnNumber)
+  let [turnDisplacement, setTurnDisplacement] = useState(sessionStorage.getItem('turnDisplacement') ? JSON.parse(sessionStorage.getItem('turnDisplacement')) : 0)
+
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
+  //reset gameover
   useEffect(() => {
     if (cookies?.user?.state === 'gameover') {
       setTurn(true);
@@ -86,7 +90,7 @@ function App() {
     }
   }, [cookies, character, intCode, timeCode, AfkTimeCode, setBluffing, setBluffShots, setLastShots, setSelecting, setSelection, setCharges,])
 
-
+  //timer turns
   useEffect(() => {
     if (!isNaN(Number(turnTime))) {
       if (turn && gameProgress === 'ongoing' && !Array.isArray(enemyBoatPlacements) && !timeCode) {
@@ -124,7 +128,7 @@ function App() {
       }
     }
   }, [socket, turnTime, timeCode, intCode, enemyBoatPlacements, turn, gameProgress, cookies, setCookie])
-
+  //update enemyboardstate
   useEffect(() => {
     setEnemyBoatPlacements(prev => {
       const allHits = Object.values(enemyBoardState).filter((item) => {
@@ -138,7 +142,7 @@ function App() {
       return prev
     })
   }, [enemyBoardState])
-
+  //win conditions, storage protection, encryption of enemy boats
   useEffect(() => {
     if (sessionStorage.getItem('enemyBoatPlacements') && gameProgress === 'ongoing' && Array.isArray(enemyBoatPlacements)) {
       const getEncryptBoats = async () => {
@@ -196,10 +200,10 @@ function App() {
       window.removeEventListener('storage', handleChangeStorage)
     }
   }, [gameProgress, socket, enemyBoardState, setBluffing, setSelecting, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
-
+  //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://localhost:8080/ws');
+    const newSocket = new WebSocket('ws://18.117.107.47:8080') || new WebSocket('ws://localhost:8080/ws');
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
       if (message.turn) {
@@ -378,7 +382,7 @@ function App() {
       }
     };
   }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setBoardState, setBoatPlacements, setCookie, setEnemyTargets, setEnemyBoatPlacements, setLastShots])
-
+  //send boats after placement
   useEffect(() => {
     if (Object.keys(boatPlacements).length === 4 && !dataSent && gameProgress === 'placement') {
       if (socket?.readyState === 1) {
@@ -401,7 +405,7 @@ function App() {
       setDataSent(false)
     }
   }, [socket, boatPlacements, gameProgress, cookies, dataSent])
-
+  //afk timer
   useEffect(() => {
     if (!turn && !AfkTimeCode) {
       let code = setTimeout(() => {
@@ -416,8 +420,7 @@ function App() {
       sessionStorage.removeItem('afkTimecode')
     }
   }, [turn, AfkTimeCode, cookies, setCookie])
-  let [enemyTurnNumber, setEnemyTurnNumber] = useState(turnNumber)
-  let [turnDisplacement, setTurnDisplacement] = useState(sessionStorage.getItem('turnDisplacement') ? JSON.parse(sessionStorage.getItem('turnDisplacement')) : 0)
+  //turn// freeshot tracker 
   useEffect(() => {
     if (gameProgress === 'ongoing') {
       setEnemyTurnNumber(prev => {
