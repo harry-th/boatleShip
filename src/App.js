@@ -30,7 +30,7 @@ function App() {
   const [gameProgress, setGameProgress] = useState(sessionStorage.getItem('gameProgress') || 'preplacement')
   const [boardState, setBoardState] = useState(sessionStorage.getItem('boardState') ? JSON.parse(sessionStorage.getItem('boardState')) : generateBoard())
   const [boats, setBoats] = useState(sessionStorage.getItem('boats') ? JSON.parse(sessionStorage.getItem('boats')) : [2, 3, 4, 5])
-  const [targets, setTargets] = useState(sessionStorage.getItem('targets') ? JSON.parse(sessionStorage.getItem('targets')) : [])
+  const [targets, setTargets] = useState(Object.values(boatPlacements).map(item => item.positions).flat())
   const [boatNames, setBoatNames] = useState(['destroyer', 'cruiser', 'battleship', 'carrier'])
   const [turnNumber, setTurnNumber] = useState(sessionStorage.getItem('turnNumber') ? JSON.parse(sessionStorage.getItem('turnNumber')) : 0)
   const [turnTime, setTurnTime] = useState(sessionStorage.getItem('turnTime') ? JSON.parse(sessionStorage.getItem('turnTime')) : 60)
@@ -54,7 +54,9 @@ function App() {
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
 
 
-
+  useEffect(() => {
+    sessionStorage.setItem('boardState', JSON.stringify(boardState))
+  })
   //reset gameover
   useEffect(() => {
     if (cookies?.user?.state === 'gameover') {
@@ -151,7 +153,7 @@ function App() {
       return prev
     })
   }, [enemyBoardState])
-
+  // encryptBluffing
   useEffect(() => {
     if (sessionStorage.getItem('wasBluffing') && gameProgress === 'ongoing' && !wasBluffing) {
       const getEncryptBluff = async () => {
@@ -249,6 +251,8 @@ function App() {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
     const newSocket = new WebSocket('ws://3.14.176.234:8080')
     // new WebSocket('ws://localhost:8080/ws');
+
+
 
 
     newSocket.onmessage = (event) => {
@@ -400,7 +404,6 @@ function App() {
         }
         sessionStorage.setItem('boardState', JSON.stringify(newState))
         if (hitOrMiss) {
-          alert('you got HIT!')
 
           const allHits = Object.values(newState).filter((item) => {
             return item.state === 'hit'
@@ -414,7 +417,6 @@ function App() {
               setMessages(prev => {
                 return [...prev, `They sunk your ${boatPlacements[boat].name}`]
               })
-              alert(`${boatPlacements[boat].name} was sunk!`)
             }
           }
         }
@@ -453,7 +455,7 @@ function App() {
         }
         sendBoats(socket)
       } else {
-        if (socket.readyState === 0) {
+        if (socket?.readyState === 0) {
           setDataSent(true)
           socket.onopen = () => {
             socket.send(JSON.stringify({ ...cookies.user, dataType: 'boats', boatPlacements }))

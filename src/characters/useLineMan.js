@@ -1,10 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const useLineMan = () => {
     const [lastShots, setLastShots] = useState([])
     const [selection, setSelection] = useState([])
     const [selecting, setSelecting] = useState(sessionStorage.getItem('selecting') ? JSON.parse(sessionStorage.getItem('selecting')) : false)
     const [charges, setCharges] = useState(sessionStorage.getItem('charges') ? JSON.parse(sessionStorage.getItem('charges')) : 4)
+    useEffect(() => {
+        if (!selecting) {
+            setSelection([])
+        }
+    }, [selecting])
     const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState,
         setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacements, setCharges) => {
         if (selection[0] === index) {
