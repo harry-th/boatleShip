@@ -24,7 +24,7 @@
   pointer-events: none;
 }
 .square.missed.green {
-  background-color: green;
+  background-color: white;
 }
 .square.protected {
   background-color: orange;

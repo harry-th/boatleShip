@@ -98,7 +98,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   return (
     <div>
       {player === 'ai' ? enemyName : cookies.user.name}
-      {(player === 'player') && <span>Turn Timer:{turnTime}</span>}
+      {(player === 'player') && <span> Turn Timer:{turnTime}</span>}
 
       <div className={styles.board}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}

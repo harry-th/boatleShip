@@ -1,15 +1,11 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 const useLineMan = () => {
     const [lastShots, setLastShots] = useState([])
     const [selection, setSelection] = useState([])
     const [selecting, setSelecting] = useState(sessionStorage.getItem('selecting') ? JSON.parse(sessionStorage.getItem('selecting')) : false)
     const [charges, setCharges] = useState(sessionStorage.getItem('charges') ? JSON.parse(sessionStorage.getItem('charges')) : 4)
-    useEffect(() => {
-        if (!selecting) {
-            setSelection([])
-        }
-    }, [selecting])
+
     const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState,
         setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacements, setCharges) => {
         if (selection[0] === index) {
@@ -247,19 +243,13 @@ const useLineMan = () => {
                             if (enemyBoardState[square].state === 'missed') newEnemyBoardState[square].state = 'selectable'
                             else if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'
                         }
+                        console.log(newEnemyBoardState)
+
                         setEnemyBoardState(newEnemyBoardState)
                         setSelecting(prev => {
                             return !prev
                         })
                         sessionStorage.setItem('selecting', JSON.stringify(!selecting))
-                        if (selecting) {
-                            setEnemyBoardState(prev => {
-                                if (Object.values(prev).findIndex(i => i.hover === 'green') !== -1) {
-                                    prev[Object.values(prev).findIndex(i => i.hover === 'green')].hover = false
-                                }
-                                return prev
-                            })
-                        }
                     }
                 }}>
                     makeLine

@@ -29,6 +29,7 @@ wss.on('connection', (ws, req) => {
 
         message = JSON.parse(message)
         if (message?.id) wscodes[message?.id] = ws
+
         if (message.turnOrder) {
             return
         }
@@ -66,7 +67,7 @@ wss.on('connection', (ws, req) => {
             boats[message.id] = message.boatPlacements
         }
         if (message.state === 'matching') {
-            if (Object.keys(groups).includes(message.id)) return
+            if (Object.keys(groups[message.id])) return // could be groups[message.id]
             else {
                 findGroup(groups, message.id, message.name, message.character)
             }
