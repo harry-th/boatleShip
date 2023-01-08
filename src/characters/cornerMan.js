@@ -1,5 +1,19 @@
 let cornerMan = () => {
-    const cornerManPlacement = (index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames) => {
+    const cornerManPlacement = (
+        index
+        , orientation
+        , boats
+        , boatNames
+        , targets
+        , boardState
+        , vsAi
+        , setGameProgress
+        , setTargets
+        , setBoatPlacements
+        , setBoardState
+        , setBoats
+        , setBoatNames
+    ) => {
         let num = [...boats].shift()
         let boatName = [...boatNames].shift()
 
@@ -34,7 +48,16 @@ let cornerMan = () => {
             return prev.slice(1, prev.length)
         })
     }
-    const cornerShot = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacements) => {
+    const cornerShot = (
+        playerOrAiCallback
+        , index
+        , enemyTargets
+        , enemyBoardState
+        , setEnemyBoardState
+        , enemyBoatPlacements
+        , setEnemyBoatPlacements
+        , hitDisplayLogic
+    ) => {
         let hitOrMiss = enemyTargets.includes(index)
         let multiple
         let state = hitOrMiss ? 'hit' : 'missed'
@@ -44,7 +67,7 @@ let cornerMan = () => {
             return item.state === 'hit'
         }).map((el) => el.id)
         if (hitOrMiss) {
-            alert('Nice Shot!')
+            hitDisplayLogic.hit(index, hitOrMiss, state)
 
             for (const boat in enemyBoatPlacements) {
                 if (allHits.includes(enemyBoatPlacements[boat].positions[0]) && allHits.includes(enemyBoatPlacements[boat].positions[enemyBoatPlacements[boat].positions.length - 1])) {
@@ -52,17 +75,19 @@ let cornerMan = () => {
                     for (const pos of multiple) {
                         newState[pos] = { id: index, state, hover: false }
                     }
-                    alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                    hitDisplayLogic.sink(enemyBoatPlacements[boat].name)
                 } else {
                     if (!enemyBoatPlacements[boat].sunk && enemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
                         setEnemyBoatPlacements(prev => {
                             prev[boat].sunk = true
                             return { ...prev }
                         })
-                        alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                        hitDisplayLogic.sink(enemyBoatPlacements[boat].name)
                     }
                 }
             }
+        } else {
+            hitDisplayLogic.hit(index, hitOrMiss, state)
         }
         setEnemyBoardState(newState)
         playerOrAiCallback(multiple || index)

@@ -12,7 +12,10 @@
   border: 4px solid black;
   border-bottom: 2px;
   p {
-    float: left;
+    font-family: "Courier New", Courier, monospace;
+    font-weight: 1000;
+    text-align: left;
+    width: 100%;
     margin: 6px;
     margin-bottom: 0px;
   }

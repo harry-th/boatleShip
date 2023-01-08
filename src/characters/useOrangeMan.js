@@ -3,8 +3,18 @@ import { useState } from "react"
 let useOrangeMan = () => {
     const [bluffing, setBluffing] = useState(sessionStorage.getItem('bluffing') ? JSON.parse(sessionStorage.getItem('bluffing')) : false)
     const [bluffShots, setBluffShots] = useState(sessionStorage.getItem('bluffShots') ? JSON.parse(sessionStorage.getItem('bluffShots')) : [])
-    const orangeShot = (playerOrAiCallback, index, enemyTargets, enemyBoardState,
-        setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacements, setBoardState) => {
+    const orangeShot = (
+        playerOrAiCallback
+        , index
+        , enemyTargets
+        , enemyBoardState
+        , setEnemyBoardState
+        , enemyBoatPlacements
+        , setEnemyBoatPlacements
+        , setBoardState
+        , hitDisplayLogic
+
+    ) => {
         if (bluffing) {
             setBluffShots(prev => {
                 sessionStorage.setItem('bluffShots', JSON.stringify([...prev, index]))
@@ -31,7 +41,7 @@ let useOrangeMan = () => {
             })
             setEnemyBoardState(newState)
             if (hitOrMiss) {
-                alert('Nice Shot!')
+                hitDisplayLogic.hit(index, hitOrMiss, state)
                 const allHits = Object.values(newState).filter((item) => {
                     return item.state === 'hit'
                 }).map((el) => el.id)
@@ -41,10 +51,12 @@ let useOrangeMan = () => {
                             prev[boat].sunk = true
                             return { ...prev }
                         })
-                        alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                        hitDisplayLogic.hit(enemyBoatPlacements[boat].name)
                     }
                 }
 
+            } else {
+                hitDisplayLogic.hit(index, hitOrMiss, state)
             }
         }
         playerOrAiCallback(index, { bluffing, orange: true })

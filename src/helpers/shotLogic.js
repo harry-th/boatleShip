@@ -1,11 +1,21 @@
-let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacements) => {
+let shotLogic = (playerOrAiCallback
+    , index
+    , enemyTargets
+    , enemyBoardState
+    , setEnemyBoardState
+    , enemyBoatPlacements
+    , setEnemyBoatPlacements
+    , hitDisplayLogic
+
+) => {
     let hitOrMiss = enemyTargets.includes(index)
     let state = hitOrMiss ? 'hit' : 'missed'
     let newState = { ...enemyBoardState }
     newState[index] = { id: index, state, hover: false }
     setEnemyBoardState(newState)
     if (hitOrMiss) {
-        alert('Nice Shot!')
+        hitDisplayLogic.hit(index, hitOrMiss, state)
+
         const allHits = Object.values(newState).filter((item) => {
             return item.state === 'hit'
         }).map((el) => el.id)
@@ -15,10 +25,11 @@ let shotLogic = (playerOrAiCallback, index, enemyTargets, enemyBoardState, setEn
                     prev[boat].sunk = true
                     return { ...prev }
                 })
-                alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                hitDisplayLogic.hit(enemyBoatPlacements[boat].name)
             }
         }
-
+    } else {
+        hitDisplayLogic.hit(index, hitOrMiss, state)
     }
     playerOrAiCallback(index)
 }

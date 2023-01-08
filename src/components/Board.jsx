@@ -12,14 +12,14 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
   gameProgress, setGameProgress, turn, setTurn, vsAi, boatNames, setBoatNames, enemyName, setCookie,
-  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber, turnTime, dataSent, setCharges, freeShotMiss, setFreeShotMiss }) => {
+  character, orangeShot, selecting, setSelecting, turnNumber, setTurnNumber,
+  turnTime, dataSent, setCharges, freeShotMiss, setFreeShotMiss, setMessages }) => {
 
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
   let { shootLine } = useLineMan()
-  const [hoverState, setHoverState] = useState(generateBoard(false, true))
+  const [hoverState, setHoverState] = useState(generateBoard(true, true))
   const checkHit = (index) => {
-
     if (gameProgress === 'placement') {
       character === 'cornerMan' ?
         cornerManPlacement(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
@@ -50,23 +50,46 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
           else
             socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot }))
         }
+
+      //message read out logic for shot processing
+      let hitDisplayLogic = {
+        hit: (index, hitOrMiss, state) => {
+          if (Array.isArray(index)) {
+            setMessages(prev => {
+              return [...prev, `You fired a volley of shots at ${index.join(', ')}!`]
+            })
+          } else {
+            setMessages(prev => {
+              if (hitOrMiss) return [...prev, `You fired at ${index} and it was a ${state}!`]
+              else return [...prev, `You fired at ${index} but it ${state}!`]
+            })
+          }
+        },
+        sink: (name) => {
+          setMessages(prev => {
+            return [...prev, `You sunk their ${name}`]
+          })
+        }
+      }
       character === 'cornerMan' ?
         cornerShot(callback,
           index, enemyTargets, enemyBoardState,
-          setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
-
+          setEnemyBoardState, enemyBoatPlacements,
+          setEnemyBoatPlacement, hitDisplayLogic
         ) : character === 'orangeMan' ?
           orangeShot(callback,
             index, enemyTargets, enemyBoardState,
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
-            setBoardState
+            setBoardState, hitDisplayLogic
           ) : character === 'lineMan' && selecting ?
-            shootLine(index, boardState, socket, cookies, enemyBoardState, enemyTargets,
-              setBoardState, setEnemyBoardState, setTurn, setSelecting,
-              enemyBoatPlacements, setEnemyBoatPlacement, setCharges, freeShotMiss)
-            : shotLogic(callback,
+            shootLine(index, boardState, socket, cookies, enemyBoardState,
+              enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting,
+              enemyBoatPlacements, setEnemyBoatPlacement, setCharges, freeShotMiss,
+              hitDisplayLogic
+            ) : shotLogic(callback,
               index, enemyTargets, enemyBoardState,
-              setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
+              setEnemyBoardState, enemyBoatPlacements,
+              setEnemyBoatPlacement, hitDisplayLogic
 
             )
       sessionStorage.setItem('enemyBoardState', JSON.stringify(enemyBoardState))
@@ -86,13 +109,13 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       }}
       onMouseEnter={() =>
         character === 'cornerMan' ?
-          cornerHover(index, gameProgress, boardState, boats, orientation, setBoardState) :
+          cornerHover(index, gameProgress, hoverState, boats, orientation, setHoverState) :
           boardHover(index, gameProgress, hoverState, boats, orientation, setHoverState)
       }
       className={[styles.square, styles[interactivity],
       boardClass && styles[(boardClass)[index].state],
       boardClass && styles[(boardClass)[index].hover],
-      player === 'player' && styles[(hoverState)[index].hover]
+      (player === 'player' && gameProgress === 'placement') && styles[(hoverState)[index].hover]
       ].join(' ')
       }>
       {index}

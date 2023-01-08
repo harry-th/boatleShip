@@ -6,8 +6,23 @@ const useLineMan = () => {
     const [selecting, setSelecting] = useState(sessionStorage.getItem('selecting') ? JSON.parse(sessionStorage.getItem('selecting')) : false)
     const [charges, setCharges] = useState(sessionStorage.getItem('charges') ? JSON.parse(sessionStorage.getItem('charges')) : 4)
 
-    const shootLine = (index, boardState, socket, cookies, enemyBoardState, enemyTargets, setBoardState, setEnemyBoardState,
-        setTurn, setSelecting, enemyBoatPlacements, setEnemyBoatPlacements, setCharges) => {
+    const shootLine = (
+        index
+        , boardState
+        , socket
+        , cookies
+        , enemyBoardState
+        , enemyTargets
+        , setBoardState
+        , setEnemyBoardState
+        , setTurn
+        , setSelecting
+        , enemyBoatPlacements
+        , setEnemyBoatPlacements
+        , setCharges
+        , freeShotMiss
+        , hitDisplayLogic
+    ) => {
         if (selection[0] === index) {
             setSelection([])
             setEnemyBoardState(prev => {
@@ -128,18 +143,19 @@ const useLineMan = () => {
                 let state = hitOrMiss ? 'hit' : 'missed'
                 newEnemyBoardState[item] = { id: item, state, hover: false }
                 if (hitOrMiss) {
-                    alert('Nice Shot!')
-
+                    hitDisplayLogic.hit(item, hitOrMiss, state)
                     const allHits = Object.values(newEnemyBoardState).filter((item) => {
                         return item.state === 'hit'
                     }).map((el) => el.id)
                     for (const boat in newEnemyBoatPlacements) {
                         if (!newEnemyBoatPlacements[boat].sunk && newEnemyBoatPlacements[boat].positions.every((b) => allHits.includes(b))) {
                             newEnemyBoatPlacements[boat].sunk = true
-                            alert(`${enemyBoatPlacements[boat].name} was sunk!`)
+                            hitDisplayLogic.sink(enemyBoatPlacements[boat].name)
                         }
                     }
 
+                } else {
+                    hitDisplayLogic.hit(index, hitOrMiss, state)
                 }
             }
             for (const square in enemyBoardState) {
@@ -192,7 +208,6 @@ const useLineMan = () => {
                     }}
 
                     onClick={() => {
-                        console.log(turn, !selecting, charges)
                         if (turn && !selecting && charges) {
                             if (turnNumber && turnNumber % 4 === 0) {
                                 setFreeShotMiss(prev => prev + 1)
@@ -235,7 +250,7 @@ const useLineMan = () => {
                                 newState[shot] = { id: shot, state, hover: false }
                             }
                             setEnemyBoardState(newState)
-                            console.log('socket', socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id, freeShot })))
+                            socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id, freeShot }))
                             setCharges(prev => {
                                 sessionStorage.setItem('charges', prev - 1)
                                 return prev - 1
@@ -251,8 +266,6 @@ const useLineMan = () => {
                             if (enemyBoardState[square].state === 'missed') newEnemyBoardState[square].state = 'selectable'
                             else if (enemyBoardState[square].state === 'selectable') newEnemyBoardState[square].state = 'missed'
                         }
-                        console.log(newEnemyBoardState)
-
                         setEnemyBoardState(newEnemyBoardState)
                         setSelecting(prev => {
                             return !prev

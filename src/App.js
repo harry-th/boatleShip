@@ -47,16 +47,16 @@ function App() {
   const [timeCode, setTimeCode] = useState(sessionStorage.getItem('timeCode') || null)
   const [AfkTimeCode, setAfkTimeCode] = useState(sessionStorage.getItem('AfkTimeCode') || null)
 
-  let [enemyTurnNumber, setEnemyTurnNumber] = useState(turnNumber)
-  let [freeShotMiss, setFreeShotMiss] = useState(sessionStorage.getItem('freeShotMiss') ? JSON.parse(sessionStorage.getItem('freeShotMiss')) : 0)
-  let [enemyFreeShotMiss, setEnemyFreeShotMiss] = useState(sessionStorage.getItem('enemyFreeShotMiss') ? JSON.parse(sessionStorage.getItem('enemyFreeShotMiss')) : 0)
+  const [enemyTurnNumber, setEnemyTurnNumber] = useState(turnNumber)
+  const [freeShotMiss, setFreeShotMiss] = useState(sessionStorage.getItem('freeShotMiss') ? JSON.parse(sessionStorage.getItem('freeShotMiss')) : 0)
+  const [enemyFreeShotMiss, setEnemyFreeShotMiss] = useState(sessionStorage.getItem('enemyFreeShotMiss') ? JSON.parse(sessionStorage.getItem('enemyFreeShotMiss')) : 0)
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
 
 
-  useEffect(() => {
-    sessionStorage.setItem('boardState', JSON.stringify(boardState))
-  }, [boardState])
+  // useEffect(() => {
+  //   sessionStorage.setItem('boardState', JSON.stringify(boardState))
+  // }, [boardState])
   //reset gameover
   useEffect(() => {
     if (cookies?.user?.state === 'gameover') {
@@ -246,7 +246,6 @@ function App() {
   }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
   //websocket connection
   useEffect(() => {
-    console.log('ws refresh')
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
     const newSocket = new WebSocket('ws://3.14.176.234:8080')
     // new WebSocket('ws://localhost:8080/ws');
@@ -421,14 +420,6 @@ function App() {
   useEffect(() => {
     sessionStorage.setItem('turnNumber', JSON.stringify(turnNumber))
   }, [turnNumber])
-  //freeShotMiss //ISSUES
-  useEffect(() => {
-    if ((4 - enemyTurnNumber % 4) !== 1) setEnemyFreeShotMiss(prev => {
-      if (prev > 0) return prev - 1
-      else return 0
-    }
-    )
-  }, [enemyTurnNumber])
   //send boats after placement
   useEffect(() => {
     if (Object.keys(boatPlacements).length === 4 && !dataSent && gameProgress === 'placement') {
@@ -563,7 +554,7 @@ function App() {
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
             setTurnNumber={setTurnNumber} setCharges={setCharges} freeShotMiss={freeShotMiss} setFreeShotMiss={setFreeShotMiss}
-          // setMessages={setMessages}
+            setMessages={setMessages}
           />
           <Dashboard
             messages={messages}
@@ -588,6 +579,7 @@ function App() {
             freeShotMiss={freeShotMiss}
             setFreeShotMiss={setFreeShotMiss}
             enemyFreeShotMiss={enemyFreeShotMiss}
+            setEnemyFreeShotMiss={setEnemyFreeShotMiss}
           />
         </> : cookies?.user?.state === 'matching' ? <>
           <Customization character={character} setCharacter={setCharacter} boatNames={boatNames}

@@ -42,7 +42,7 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
             <div onClick={() => {
                 setName(null)
                 setDisplay('name')
-            }}> {name || (cookies.user.name !== 'noName' ? cookies.user.name + 1 : null)} {cookies.user.name !== 'noName' && <span> wins/losses: {cookies.user.wins} / {cookies.user.losses}</span>}</div>
+            }}> {name || (cookies.user.name !== 'noName' ? cookies.user.name : null)} {cookies.user.name !== 'noName' && <span> wins/losses: {cookies.user.wins} / {cookies.user.losses}</span>}</div>
             <div className={styles.boatform}>
                 {(name && display === 'name') && <p>choose Boat names?</p>}
                 <form onSubmit={(e) => setInformation(e)}>
