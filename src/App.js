@@ -28,7 +28,7 @@ function App() {
   const [orientation, setOrientation] = useState('h')
   const [boatPlacements, setBoatPlacements] = useState(sessionStorage.getItem('boatPlacements') ? JSON.parse(sessionStorage.getItem('boatPlacements')) : [])
   const [gameProgress, setGameProgress] = useState(sessionStorage.getItem('gameProgress') || 'preplacement')
-  const [boardState, setBoardState] = useState(sessionStorage.getItem('boardState') ? JSON.parse(sessionStorage.getItem('boardState')) : generateBoard())
+  const [boardState, setBoardState] = useState(sessionStorage.getItem('boardState') ? JSON.parse(sessionStorage.getItem('boardState')) : generateBoard(true, true))
   const [boats, setBoats] = useState(sessionStorage.getItem('boats') ? JSON.parse(sessionStorage.getItem('boats')) : [2, 3, 4, 5])
   const [targets, setTargets] = useState(Object.values(boatPlacements).map(item => item.positions).flat())
   const [boatNames, setBoatNames] = useState(['destroyer', 'cruiser', 'battleship', 'carrier'])
@@ -39,7 +39,7 @@ function App() {
   const [wasBluffing, setWasBluffing] = useState(sessionStorage.getItem('wasBluffing') || 'no')
   const [enemyBoatPlacements, setEnemyBoatPlacements] = useState([])
   const [enemyBoats, setEnemyBoats] = useState([2, 3, 4, 5])
-  const [enemyBoardState, setEnemyBoardState] = useState(sessionStorage.getItem('enemyBoardState') ? JSON.parse(sessionStorage.getItem('enemyBoardState')) : generateBoard())
+  const [enemyBoardState, setEnemyBoardState] = useState(sessionStorage.getItem('enemyBoardState') ? JSON.parse(sessionStorage.getItem('enemyBoardState')) : generateBoard(true, true))
   const [enemyTargets, setEnemyTargets] = useState(Object.values(enemyBoatPlacements)?.map(item => item.positions).flat() || null)
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
 
@@ -66,7 +66,7 @@ function App() {
       setVsAi(false)
       setOrientation('h')
       setBoatPlacements([])
-      setBoardState(generateBoard())
+      setBoardState(generateBoard(true, true))
       setBoats([2, 3, 4, 5])
       setTargets([])
       setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
@@ -75,7 +75,7 @@ function App() {
       // setTurnTime(30)
       setEnemyBoatPlacements([])
       setEnemyBoats([2, 3, 4, 5])
-      setEnemyBoardState(generateBoard())
+      setEnemyBoardState(generateBoard(true, true))
       setEnemyTargets(null)
       setIntCode(null)
       setTimeCode(null)
@@ -246,9 +246,11 @@ function App() {
   }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
   //websocket connection
   useEffect(() => {
+    console.log('ws refresh')
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://3.14.176.234:8080');
-    // new WebSocket('ws://localhost:8080/ws'); 
+    const newSocket = new WebSocket('ws://3.14.176.234:8080')
+    // new WebSocket('ws://localhost:8080/ws');
+
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
       if (message.turn) {
@@ -406,7 +408,7 @@ function App() {
       }
     };
     newSocket.onopen = () => {
-      newSocket.send(JSON.stringify({ id: cookies.user.id, turnOrder: true }))
+      if (cookies?.user?.id) newSocket.send(JSON.stringify({ id: cookies.user.id, turnOrder: true }))
     }
     setSocket(newSocket);
     return () => {
@@ -485,7 +487,7 @@ function App() {
         setFreeShotMiss(0)
         setOrientation('h')
         setBoatPlacements([])
-        setBoardState(generateBoard())
+        setBoardState(generateBoard(true, true))
         setBoats([2, 3, 4, 5])
         setTargets([])
         setBoatNames(['destroyer', 'cruiser', 'battleship', 'carrier'])
@@ -493,7 +495,7 @@ function App() {
         setEnemyName(null)
         setGameProgress('placement')
         setEnemyBoats([2, 3, 4, 5])
-        setEnemyBoardState(generateBoard())
+        setEnemyBoardState(generateBoard(true, true))
         setIntCode(null)
         setTimeCode(null)
         setAfkTimeCode(null)
@@ -515,9 +517,9 @@ function App() {
       <button onClick={() => {
         removeCookie('user')
 
-        setEnemyBoardState(generateBoard())
+        setEnemyBoardState(generateBoard(true, true))
         setBoatPlacements([])
-        setBoardState(generateBoard())
+        setBoardState(generateBoard(true, true))
         setEnemyTargets(null)
         setTargets([])
         setBoats([2, 3, 4, 5])

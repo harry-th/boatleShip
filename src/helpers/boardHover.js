@@ -1,12 +1,12 @@
-const boardHover = (index, gameProgress, boardState, boats, orientation, setBoardState) => {
-    if (gameProgress === 'placement' && boardState) {
+const boardHover = (index, gameProgress, hoverState, boats, orientation, setHoverState) => {
+    if (gameProgress === 'placement' && hoverState) {
         let coords = []
         for (let i = 0; i < boats[0]; i++) {
             coords.push(orientation === 'h' ? index + i : index + i * 10)
         }
-        let newBoardState = { ...boardState }
+        let newBoardState = JSON.parse(JSON.stringify(hoverState))
         for (let i = 0; i < coords.length; i++) {
-            if (boardState[coords[i]]?.state === 'mine') return
+            if (hoverState[coords[i]]?.state === 'mine') return
         }
 
         for (const square in newBoardState) {
@@ -17,7 +17,7 @@ const boardHover = (index, gameProgress, boardState, boats, orientation, setBoar
                 newBoardState[square].hover = false
             }
         }
-        setBoardState(newBoardState)
+        setHoverState(newBoardState)
     }
 }
 

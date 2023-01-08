@@ -6,6 +6,8 @@ import boardHover from '../helpers/boardHover'
 import placementLogic from '../helpers/placementLogic'
 import cornerMan from '../characters/cornerMan'
 import useLineMan from '../characters/useLineMan'
+import generateBoard from '../helpers/generateBoard'
+import { useState } from 'react'
 const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardState, setEnemyBoardState,
   targets, setTargets, enemyTargets, setEnemyTargets, orientation, boatPlacements,
   setBoatPlacements, boats, setBoats, setEnemyBoatPlacement, enemyBoatPlacements, enemyBoats,
@@ -15,6 +17,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
   let { aiAttack } = useAi()
   let { cornerManPlacement, cornerHover, cornerShot } = cornerMan()
   let { shootLine } = useLineMan()
+  const [hoverState, setHoverState] = useState(generateBoard(false, true))
   const checkHit = (index) => {
 
     if (gameProgress === 'placement') {
@@ -84,11 +87,12 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       onMouseEnter={() =>
         character === 'cornerMan' ?
           cornerHover(index, gameProgress, boardState, boats, orientation, setBoardState) :
-          boardHover(index, gameProgress, boardState, boats, orientation, setBoardState)
+          boardHover(index, gameProgress, hoverState, boats, orientation, setHoverState)
       }
       className={[styles.square, styles[interactivity],
       boardClass && styles[(boardClass)[index].state],
-      boardClass && styles[(boardClass)[index].hover]
+      boardClass && styles[(boardClass)[index].hover],
+      player === 'player' && styles[(hoverState)[index].hover]
       ].join(' ')
       }>
       {index}
