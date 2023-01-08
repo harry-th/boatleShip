@@ -168,25 +168,31 @@ const useLineMan = () => {
                 <button
                     onMouseOver={() => {
                         if (turn) {
-                            for (const shot of lastShots) {
-                                setEnemyBoardState(prev => {
-                                    if (prev[shot].hover !== 'twoShot') prev[shot].last = prev[shot].hover
-                                    prev[shot].hover = 'twoShot'
-                                    return prev
-                                })
-                            }
+
+                            setEnemyBoardState(prev => {
+                                if (lastShots[0] && prev[lastShots[0]].hover !== 'twoShot') {
+                                    prev[lastShots[0]].last = prev[lastShots[0]].hover
+                                    prev[lastShots[0]].hover = 'twoShot'
+                                }
+                                if (lastShots[1] && prev[lastShots[1]].hover !== 'twoShot') {
+                                    prev[lastShots[1]].last = prev[lastShots[1]].hover
+                                    prev[lastShots[1]].hover = 'twoShot'
+                                }
+                                return prev
+                            })
+
                         }
                     }}
                     onMouseLeave={() => {
                         setEnemyBoardState(prev => {
-                            for (const sq in prev) {
-                                if (prev[sq].hover === 'twoShot') prev[sq].hover = prev[sq].last
-                            }
+                            if (lastShots[0] && prev[lastShots[0]].hover === 'twoShot') prev[lastShots[0]].hover = prev[lastShots[0]].last
+                            if (lastShots[1] && prev[lastShots[1]].hover === 'twoShot') prev[lastShots[1]].hover = prev[lastShots[1]].last
                             return prev
                         })
                     }}
 
                     onClick={() => {
+                        console.log(turn, !selecting, charges)
                         if (turn && !selecting && charges) {
                             if (turnNumber && turnNumber % 4 === 0) {
                                 setFreeShotMiss(prev => prev + 1)
@@ -195,16 +201,18 @@ const useLineMan = () => {
                                 else {
                                     setTurn(false)
                                     sessionStorage.setItem('turn', JSON.stringify(false))
-                                    setFreeShotMiss(prev => prev - 1)
+                                    setFreeShotMiss(prev => {
+                                        if (prev > 0) return prev - 1
+                                        else return prev
+                                    })
                                 }
                             } else {
                                 setTurn(false)
                                 sessionStorage.setItem('turn', JSON.stringify(false))
                             }
 
-                            let newState = { ...enemyBoardState }
+                            let newState = JSON.parse(JSON.stringify(enemyBoardState))
                             for (const shot of lastShots) {
-
                                 let hitOrMiss = (enemyTargets).includes(Number(shot))
                                 let state = hitOrMiss ? 'hit' : 'missed'
                                 if (hitOrMiss && newState[shot].state !== 'hit') {
@@ -227,7 +235,7 @@ const useLineMan = () => {
                                 newState[shot] = { id: shot, state, hover: false }
                             }
                             setEnemyBoardState(newState)
-                            socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id, freeShot }))
+                            console.log('socket', socket.send(JSON.stringify({ dataType: 'shot', index: lastShots, id: cookies.user.id, freeShot })))
                             setCharges(prev => {
                                 sessionStorage.setItem('charges', prev - 1)
                                 return prev - 1

@@ -1,4 +1,11 @@
+::-webkit-scrollbar {
+  background: transparent;
+  width: 0;
+  height: 0;
+}
 .logcontainer {
+  display: flex;
+  flex-direction: column-reverse;
   overflow: scroll;
   width: 400px;
   height: 200px;
