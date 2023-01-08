@@ -42,6 +42,7 @@ function App() {
   const [enemyBoardState, setEnemyBoardState] = useState(sessionStorage.getItem('enemyBoardState') ? JSON.parse(sessionStorage.getItem('enemyBoardState')) : generateBoard(true, true))
   const [enemyTargets, setEnemyTargets] = useState(Object.values(enemyBoatPlacements)?.map(item => item.positions).flat() || null)
   const [enemyName, setEnemyName] = useState(sessionStorage.getItem('enemyName'))
+  const [enemyTurnTime, setEnemyTurnTime] = useState(null)
 
   const [intCode, setIntCode] = useState(sessionStorage.getItem('intCode') || null)
   const [timeCode, setTimeCode] = useState(sessionStorage.getItem('timeCode') || null)
@@ -52,11 +53,40 @@ function App() {
   const [enemyFreeShotMiss, setEnemyFreeShotMiss] = useState(sessionStorage.getItem('enemyFreeShotMiss') ? JSON.parse(sessionStorage.getItem('enemyFreeShotMiss')) : 0)
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
+  const [timeDataSent, setTimeDataSent] = useState(false)
+  //important socke.onopne!! and enemy turnTime logic
+  useEffect(() => {
+    if (socket && !turn && gameProgress === 'ongoing' && !timeDataSent) {
+      console.log(socket?.readyState === 1)
+      if (socket?.readyState === 1) {
+        socket.send(JSON.stringify({ id: cookies.user.id, time: turnTime }))
+        setTimeDataSent(true)
+      } else if (socket?.readyState === 0) {
+        setTimeDataSent(true)
+        socket.onopen = () => {
+          socket.send(JSON.stringify({ id: cookies.user.id, time: turnTime }))
+        }
+      }
+    } else if (turn) {
+      setTimeDataSent(false)
+    }
+    if (enemyTurnTime && !sessionStorage.getItem('enemyTurnIntervalCode') && !turn) {
+      let intcode = setInterval(() => {
+        setEnemyTurnTime(prev => {
+          return prev - 1
+        })
+      }, 1000)
+      sessionStorage.setItem('enemyTurnIntervalCode', intcode)
+    } else if (turn && sessionStorage.getItem('enemyTurnIntervalCode')) {
+      clearInterval(sessionStorage.getItem('enemyTurnIntervalCode'))
+      sessionStorage.removeItem('enemyTurnIntervalCode')
+    }
 
+  }, [socket, cookies, enemyTurnTime, turn, turnTime, timeDataSent, gameProgress])
 
-  // useEffect(() => {
-  //   sessionStorage.setItem('boardState', JSON.stringify(boardState))
-  // }, [boardState])
+  useEffect(() => {
+    sessionStorage.setItem('boardState', JSON.stringify(boardState))
+  }, [boardState])
   //reset gameover
   useEffect(() => {
     if (cookies?.user?.state === 'gameover') {
@@ -247,11 +277,16 @@ function App() {
   //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://3.14.176.234:8080')
-    // new WebSocket('ws://localhost:8080/ws');
+    const newSocket = new WebSocket('ws://localhost:8080/ws');
+    // new WebSocket('ws://3.14.176.234:8080')
+
 
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
+      console.log(message)
+      if (message.time) {
+        setEnemyTurnTime(message.time)
+      }
       if (message.turn) {
         setPlayerOrder('second')
         sessionStorage.setItem('playerOrder', 'second')
@@ -554,7 +589,7 @@ function App() {
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
             setTurnNumber={setTurnNumber} setCharges={setCharges} freeShotMiss={freeShotMiss} setFreeShotMiss={setFreeShotMiss}
-            setMessages={setMessages}
+            enemyTurnTime={enemyTurnTime} setMessages={setMessages}
           />
           <Dashboard
             messages={messages}

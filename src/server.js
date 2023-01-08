@@ -33,6 +33,10 @@ wss.on('connection', (ws, req) => {
         if (message.turnOrder) {
             return
         }
+        if (message.time) {
+            if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ time: message.time }))
+            return
+        }
         if (message.win) {
             if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'win' }))
             delete groups[message.id]
@@ -67,7 +71,7 @@ wss.on('connection', (ws, req) => {
             boats[message.id] = message.boatPlacements
         }
         if (message.state === 'matching') {
-            if (Object.keys(groups[message.id])) return // could be groups[message.id]
+            if (Object.keys(groups).includes(message.id)) return // could be groups[message.id]
             else {
                 findGroup(groups, message.id, message.name, message.character)
             }
