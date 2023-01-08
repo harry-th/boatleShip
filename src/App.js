@@ -54,7 +54,7 @@ function App() {
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
   const [timeDataSent, setTimeDataSent] = useState(false)
-  //important socke.onopne!! and enemy turnTime logic
+  //enemy turnTime logic
   useEffect(() => {
     if (socket && !turn && gameProgress === 'ongoing' && !timeDataSent) {
       if (socket?.readyState === 1) {
@@ -119,6 +119,7 @@ function App() {
       setSelection([])
       setCharges(4)
 
+      clearInterval(sessionStorage.getItem('enemyTurnIntervalCode'))
       sessionStorage.clear()
       // sessionStorage.setItem('character', character)
       clearInterval(intCode)
@@ -276,13 +277,10 @@ function App() {
   //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://3.14.176.234:8080')
-    // new WebSocket('ws://localhost:8080/ws');
-
-
+    const newSocket = new WebSocket('ws://localhost:8080/ws');
+    // new WebSocket('ws://3.14.176.234:8080')
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
-      console.log(message)
       if (message.time) {
         setEnemyTurnTime(message.time)
       }
@@ -390,10 +388,17 @@ function App() {
         }
         if (message.orange) {
           setEnemyBoardState(prev => {
-            let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
-            if (prev[oldProtected]?.hover) prev[oldProtected].hover = prev[oldProtected].oldState
-            prev[message.index].oldState = prev[message.index].hover
+            console.log(enemyTurnNumber)
+            if ((enemyTurnNumber + 1) % 4 !== 0 || message.freeShot) {
+              let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+              if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+              oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+              if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+              oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+              if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+            }
             prev[message.index].hover = 'protected'
+            sessionStorage.setItem('boardState', JSON.stringify(prev))
             return prev
           })
         }
@@ -449,7 +454,7 @@ function App() {
         newSocket.close();
       }
     };
-  }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setCookie, setLastShots])
+  }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setCookie, setLastShots, enemyTurnNumber])
   //updates turnNumber
   useEffect(() => {
     sessionStorage.setItem('turnNumber', JSON.stringify(turnNumber))
@@ -557,6 +562,8 @@ function App() {
         setSelecting(false)
         setDataSent(false)
         setCharacter('none')
+        clearInterval(sessionStorage.getItem('enemyTurnIntervalCode'))
+
         sessionStorage.clear()
 
       }}>remove cookie</button>

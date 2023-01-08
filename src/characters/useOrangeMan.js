@@ -12,8 +12,8 @@ let useOrangeMan = () => {
         , enemyBoatPlacements
         , setEnemyBoatPlacements
         , setBoardState
+        , freeShotMiss
         , hitDisplayLogic
-
     ) => {
         if (bluffing) {
             setBluffShots(prev => {
@@ -21,8 +21,12 @@ let useOrangeMan = () => {
                 return [...prev, index]
             })
             setBoardState(prev => {
-                let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
-                if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+                if (!freeShotMiss) {
+                    let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+                    if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+                    oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+                    if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+                }
                 prev[index].hover = 'protected'
                 sessionStorage.setItem('boardState', JSON.stringify(prev))
                 return prev
@@ -32,9 +36,15 @@ let useOrangeMan = () => {
             let state = hitOrMiss ? 'hit' : 'missed'
             let newState = { ...enemyBoardState }
             newState[index] = { id: index, state, hover: false }
+            console.log(freeShotMiss)
+
             setBoardState(prev => {
-                let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
-                if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+                if (!freeShotMiss) {
+                    let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+                    if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+                    oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
+                    if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
+                }
                 prev[index].hover = 'protected'
                 sessionStorage.setItem('boardState', JSON.stringify(prev))
                 return prev

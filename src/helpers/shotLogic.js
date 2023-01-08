@@ -25,7 +25,7 @@ let shotLogic = (playerOrAiCallback
                     prev[boat].sunk = true
                     return { ...prev }
                 })
-                hitDisplayLogic.hit(enemyBoatPlacements[boat].name)
+                hitDisplayLogic.sink(enemyBoatPlacements[boat].name)
             }
         }
     } else {

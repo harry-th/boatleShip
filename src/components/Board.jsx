@@ -24,7 +24,6 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       character === 'cornerMan' ?
         cornerManPlacement(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
         : placementLogic(index, orientation, boats, boatNames, targets, boardState, vsAi, setGameProgress, setTargets, setBoatPlacements, setBoardState, setBoats, setBoatNames)
-
     } else if (turn || vsAi) {
       let callback = vsAi ? () => {
         aiAttack(boardState, setBoardState, boatPlacements, setBoatPlacements, targets)
@@ -80,7 +79,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
           orangeShot(callback,
             index, enemyTargets, enemyBoardState,
             setEnemyBoardState, enemyBoatPlacements, setEnemyBoatPlacement,
-            setBoardState, hitDisplayLogic
+            setBoardState, freeShotMiss, hitDisplayLogic
           ) : character === 'lineMan' && selecting ?
             shootLine(index, boardState, socket, cookies, enemyBoardState,
               enemyTargets, setBoardState, setEnemyBoardState, setTurn, setSelecting,
@@ -127,7 +126,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       {player === 'ai' ? enemyName : cookies.user.name}
       {(player === 'player') ? <span> Turn Timer:{turnTime}</span> : <span> Turn Timer:{enemyTurnTime}</span>}
 
-      <div className={styles.board}>
+      <div className={[styles.board, (player === 'player' && turn) && styles['yourturn']].join(' ')}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>
     </div>
