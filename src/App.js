@@ -57,7 +57,6 @@ function App() {
   //important socke.onopne!! and enemy turnTime logic
   useEffect(() => {
     if (socket && !turn && gameProgress === 'ongoing' && !timeDataSent) {
-      console.log(socket?.readyState === 1)
       if (socket?.readyState === 1) {
         socket.send(JSON.stringify({ id: cookies.user.id, time: turnTime }))
         setTimeDataSent(true)
@@ -277,8 +276,8 @@ function App() {
   //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://localhost:8080/ws');
-    // new WebSocket('ws://3.14.176.234:8080')
+    const newSocket = new WebSocket('ws://3.14.176.234:8080')
+    // new WebSocket('ws://localhost:8080/ws');
 
 
     newSocket.onmessage = (event) => {
