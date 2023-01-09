@@ -4,6 +4,7 @@ import styles from '../styles/Customization.module.css'
 const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCookie, cookies, setVsAi, socket }) => {
     const [name, setName] = useState(null)
     const [display, setDisplay] = useState(character === 'none' ? 'character' : cookies.user.name !== 'noName' ? 'done' : 'name')
+    const [waiting, setWaiting] = useState(null)
     const setInformation = (e) => {
         e.preventDefault()
         let names = Object.values(e.target).filter(i => i.name).map(item => item.value)
@@ -89,6 +90,15 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
             {(cookies.user.name !== 'noName' && character) && <div>
                 {display === 'done' && <div>
                     <button onClick={() => {
+                        let periods = () => {
+                            setTimeout(() => {
+                                setWaiting(prev => prev + '.')
+                                if (cookies.user.state === 'matching') periods()
+                            }, 1000)
+                        }
+                        periods()
+
+                        setWaiting('waiting for match')
                         setVsAi(false)
                         socket.send(JSON.stringify({ ...cookies.user, character }))
                     }}>find game</button>
@@ -100,6 +110,7 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                         setCharacter('none')
                     }}>change character
                     </button>
+                    {waiting && <p>{waiting}</p>}
                 </div>}</div>}
         </div>)
 }
