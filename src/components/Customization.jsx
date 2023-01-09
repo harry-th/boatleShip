@@ -43,7 +43,7 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                         <li>has 4 ability usages total </li>
                         <li>can fire the opponents last two shots back</li>
                         <li>can connect a line and fire at all squares in between two of your misses,
-                            if an opponent's shot is not in between</li>
+                            if an opponent's shot is not in between.</li>
                     </ul>
                 </div>
                 <div onClick={() => {
@@ -54,7 +54,7 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                 }}><h5>corner mode</h5>
                     <ul>
                         <li>can build around the edges of the board</li>
-                        <li>if you hit both the rear and head of a boat you sink the boat immediately</li>
+                        <li>if you hit both the rear and head of a boat you sink the boat immediately.</li>
                     </ul>
                 </div>
             </div>}
