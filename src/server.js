@@ -27,7 +27,6 @@ wss.on('connection', (ws, req) => {
 
     ws.on('message', (message) => {
         message = JSON.parse(message)
-        console.log(message)
 
         if (message?.id) wscodes[message?.id] = ws
 

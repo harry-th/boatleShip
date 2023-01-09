@@ -266,9 +266,7 @@ function App() {
     // new WebSocket('ws://localhost:8080/ws');
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
-      console.log(message)
       if (message.time) {
-        console.log(message.time, 'time')
         setEnemyTurnTime(message.time)
       }
       if (message.turn) {
