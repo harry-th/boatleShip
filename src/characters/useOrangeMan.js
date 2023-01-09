@@ -36,7 +36,6 @@ let useOrangeMan = () => {
             let state = hitOrMiss ? 'hit' : 'missed'
             let newState = { ...enemyBoardState }
             newState[index] = { id: index, state, hover: false }
-            console.log(freeShotMiss)
 
             setBoardState(prev => {
                 if (!freeShotMiss) {

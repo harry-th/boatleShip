@@ -53,22 +53,8 @@ function App() {
   const [enemyFreeShotMiss, setEnemyFreeShotMiss] = useState(sessionStorage.getItem('enemyFreeShotMiss') ? JSON.parse(sessionStorage.getItem('enemyFreeShotMiss')) : 0)
 
   const [dataSent, setDataSent] = useState(sessionStorage.getItem('dataSent') || false)
-  const [timeDataSent, setTimeDataSent] = useState(false)
   //enemy turnTime logic
   useEffect(() => {
-    if (socket && !turn && gameProgress === 'ongoing' && !timeDataSent) {
-      if (socket?.readyState === 1) {
-        socket.send(JSON.stringify({ id: cookies.user.id, time: turnTime }))
-        setTimeDataSent(true)
-      } else if (socket?.readyState === 0) {
-        setTimeDataSent(true)
-        socket.onopen = () => {
-          socket.send(JSON.stringify({ id: cookies.user.id, time: turnTime }))
-        }
-      }
-    } else if (turn) {
-      setTimeDataSent(false)
-    }
     if (enemyTurnTime && !sessionStorage.getItem('enemyTurnIntervalCode') && !turn) {
       let intcode = setInterval(() => {
         setEnemyTurnTime(prev => {
@@ -80,8 +66,7 @@ function App() {
       clearInterval(sessionStorage.getItem('enemyTurnIntervalCode'))
       sessionStorage.removeItem('enemyTurnIntervalCode')
     }
-
-  }, [socket, cookies, enemyTurnTime, turn, turnTime, timeDataSent, gameProgress])
+  }, [enemyTurnTime, turn,])
 
   useEffect(() => {
     sessionStorage.setItem('boardState', JSON.stringify(boardState))
@@ -277,12 +262,13 @@ function App() {
   //websocket connection
   useEffect(() => {
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
-    const newSocket = new WebSocket('ws://3.14.176.234:8080')
-    // new WebSocket('ws://localhost:8080/ws');
-    // 
+    const newSocket = new WebSocket('ws://localhost:8080/ws');
+    //  new WebSocket('ws://3.14.176.234:8080') 
     newSocket.onmessage = (event) => {
       let message = JSON.parse(event.data);
+      console.log(message)
       if (message.time) {
+        console.log(message.time, 'time')
         setEnemyTurnTime(message.time)
       }
       if (message.turn) {
@@ -389,7 +375,6 @@ function App() {
         }
         if (message.orange) {
           setEnemyBoardState(prev => {
-            console.log(enemyTurnNumber)
             if ((enemyTurnNumber + 1) % 4 !== 0 || message.freeShot) {
               let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
               if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
@@ -596,7 +581,7 @@ function App() {
             enemyBoats={enemyBoats} boatPlacements={boatPlacements} setBoatPlacements={setBoatPlacements}
             vsAi={vsAi} enemyName={enemyName} selecting={selecting} setSelecting={setSelecting} turnNumber={turnNumber}
             setTurnNumber={setTurnNumber} setCharges={setCharges} freeShotMiss={freeShotMiss} setFreeShotMiss={setFreeShotMiss}
-            enemyTurnTime={enemyTurnTime} setMessages={setMessages}
+            setMessages={setMessages} turnTime={turnTime} enemyTurnTime={enemyTurnTime}
           />
           <Dashboard
             messages={messages}

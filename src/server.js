@@ -26,15 +26,12 @@ const findGroup = (groups, id, name, character) => {
 wss.on('connection', (ws, req) => {
 
     ws.on('message', (message) => {
-
         message = JSON.parse(message)
+        console.log(message)
+
         if (message?.id) wscodes[message?.id] = ws
 
         if (message.turnOrder) {
-            return
-        }
-        if (message.time) {
-            if (wscodes[groups[message.id]]) wscodes[groups[message.id]].send(JSON.stringify({ time: message.time }))
             return
         }
         if (message.win) {
@@ -59,12 +56,12 @@ wss.on('connection', (ws, req) => {
             return
         }
         if (message.dataType === 'shot') {
-            if (message.bluffArray) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, bluffArray: message.bluffArray }))
-            else if (message.orange && message.freeShot) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing, freeShot: true }))
-            else if (message.orange) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing }))
-            else if (message.freeShot) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, freeShot: true }))
+            if (message.bluffArray) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, bluffArray: message.bluffArray, time: message.time }))
+            else if (message.orange && message.freeShot) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing, freeShot: true, time: message.time }))
+            else if (message.orange) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, orange: message.orange, bluffing: message.bluffing, time: message.time }))
+            else if (message.freeShot) wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, freeShot: true, time: message.time }))
             else
-                wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index }))
+                wscodes[groups[message.id]].send(JSON.stringify({ dataType: 'shot', index: message.index, time: message.time }))
             return
         }
         if (message.dataType === 'boats') {
