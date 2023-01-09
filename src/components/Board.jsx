@@ -45,9 +45,9 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
               setFreeShotMiss(prev => prev - 1)
             }
           }
-          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot, ...shotData, time: turnTime + 20 }))
+          if (character === 'orangeMan') socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot, ...shotData, time: turnTime + 20 > 120 ? 120 : turnTime + 20 }))
           else
-            socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot, time: turnTime + 20 }))
+            socket.send(JSON.stringify({ dataType: 'shot', index: shot, id: cookies.user.id, freeShot, time: turnTime + 20 > 120 ? 120 : turnTime + 20 }))
         }
 
       //message read out logic for shot processing
