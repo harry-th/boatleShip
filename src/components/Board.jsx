@@ -126,7 +126,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
       {player === 'ai' ? enemyName : cookies.user.name}
       {(player === 'player') ? <span> Turn Timer:{turnTime}</span> : <span> Turn Timer:{enemyTurnTime}</span>}
 
-      <div className={[styles.board, (player === 'player' && turn) && styles['yourturn']].join(' ')}>
+      <div className={[styles.board, (player === 'ai' && turn && gameProgress === 'ongoing') && styles.yourturn].join(' ')}>
         {[...Array(100)].map((e, i) => <>{element(i)}</>)}
       </div>
     </div>

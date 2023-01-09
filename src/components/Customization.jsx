@@ -25,19 +25,38 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                     setCharacter('orangeMan')
                     if (cookies.user.name === 'noName') setDisplay('name')
                     else setDisplay('done')
-                }}>orange mode</div>
+                }}><h5>orange mode</h5>
+                    <ul>
+                        <li>Your shots protect the equivalent square on your board</li>
+                        <li>Can bluff: when bluffing you can't see the results
+                            of your shots, if the enemy doesn't call your bluff you
+                            can return 3 shots for each turn since you started bluffing.</li>
+                    </ul>
+                </div>
                 <div onClick={() => {
                     sessionStorage.setItem('character', 'lineMan')
                     setCharacter('lineMan')
                     if (cookies.user.name === 'noName') setDisplay('name')
                     else setDisplay('done')
-                }}>line mode</div>
+                }}><h5>line mode</h5>
+                    <ul>
+                        <li>has 4 ability usages total </li>
+                        <li>can fire the opponents last two shots back</li>
+                        <li>can connect a line and fire at all squares in between two of your misses,
+                            if an opponent's shot is not in between</li>
+                    </ul>
+                </div>
                 <div onClick={() => {
                     sessionStorage.setItem('character', 'cornerMan')
                     setCharacter('cornerMan')
                     if (cookies.user.name === 'noName') setDisplay('name')
                     else setDisplay('done')
-                }}>corner mode</div>
+                }}><h5>corner mode</h5>
+                    <ul>
+                        <li>can build around the edges of the board</li>
+                        <li>if you hit both the rear and head of a boat you sink the boat immediately</li>
+                    </ul>
+                </div>
             </div>}
             <div onClick={() => {
                 setName(null)

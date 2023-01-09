@@ -10,6 +10,9 @@
   justify-content: center;
 }
 .customization .characterselect div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   width: 150px;
   height: 250px;
   display: flex;
@@ -21,6 +24,17 @@
 }
 .customization .characterselect div:hover {
   background-color: red;
+}
+.customization .characterselect div ul {
+  margin: 10px;
+  margin-bottom: auto;
+  padding: 10px;
+}
+.customization .characterselect div ul li {
+  text-align: left;
+  color: rgb(204, 225, 204);
+  font-size: 10px;
+  margin: 2px;
 }
 .customization .boatform form {
   display: flex;

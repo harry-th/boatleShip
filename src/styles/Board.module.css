@@ -51,7 +51,6 @@
   width: 400px;
   height: 400px;
 }
-
-.yourturn {
-  box-shadow: 5px 5px 5px green;
+.board.yourturn {
+  box-shadow: 3px 3px 3px green;
 }/*# sourceMappingURL=Board.module.css.map */

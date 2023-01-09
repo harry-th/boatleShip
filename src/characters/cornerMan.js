@@ -100,7 +100,7 @@ let cornerMan = () => {
                 coords.push(orientation === 'h' ? index + i : index + i * 10)
             }
             for (let i = 0; i < coords.length; i++) {
-                if (coords[i] > 99) coords[i] = coords[i] - 100
+                if (coords[i] > 99) coords[i] = coords[i] - 99
             }
             let newBoardState = { ...boardState }
             for (let i = 0; i < coords.length; i++) {
