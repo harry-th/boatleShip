@@ -4,7 +4,7 @@
 
 Three character:  
 line:  
-1.can fire the last two shots fired at him *overwrite orange ability*  
+1. can fire the last two shots fired at him *overwrite orange ability*  
 2. connect any two misses that are unobstructed in between by shots by you or your opponent on your home board(the one that contains your ships)  
 orange:  
 1. protects the last square that he fired at, this square cannot be targeted by the opponent on the subsequent turn  
