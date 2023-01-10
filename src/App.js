@@ -359,11 +359,12 @@ function App() {
         sessionStorage.setItem('targets', JSON.stringify(targets))
       } else if (message.dataType === 'shot') {
         setEnemyTurnNumber(prev => {
+          let newTurn = !message.freeShot ? 1 : 0
           if (playerOrder === 'first') {
-            return (turnNumber + 1)
+            return (turnNumber + newTurn + 1)
           }
           if (playerOrder === 'second') {
-            return (turnNumber - 2)
+            return (turnNumber + newTurn - 2)
           }
         })
         if (character === 'orangeMan' && bluffing) setBluffing('ready')

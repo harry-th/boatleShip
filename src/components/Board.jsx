@@ -104,7 +104,7 @@ const Board = ({ player, socket, cookies, boardState, setBoardState, enemyBoardS
     let interactivity = condition ? 'active' : 'inactive'
     return <div key={index}
       onClick={() => {
-        if (boardClass[index].state === null || boardClass[index].state === 'selectable') checkHit(index)
+        if ((boardClass[index].state === null || boardClass[index].state === 'selectable') && socket.readyState === 1) checkHit(index)
       }}
       onMouseEnter={() =>
         character === 'cornerMan' ?
