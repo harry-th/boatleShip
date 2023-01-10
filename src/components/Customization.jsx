@@ -92,7 +92,10 @@ const Customization = ({ character, setCharacter, boatNames, setBoatNames, setCo
                     <button onClick={() => {
                         let periods = () => {
                             setTimeout(() => {
-                                setWaiting(prev => prev + '.')
+                                setWaiting(prev => {
+                                    if (prev.match(/\.\.\./)) return 'waiting for match'
+                                    return prev + '.'
+                                })
                                 if (cookies.user.state === 'matching') periods()
                             }, 1000)
                         }

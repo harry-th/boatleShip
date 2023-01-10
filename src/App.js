@@ -261,6 +261,7 @@ function App() {
   }, [gameProgress, socket, enemyBoardState, boatPlacements, enemyBoatPlacements, boats, cookies, setCookie])
   //websocket connection
   useEffect(() => {
+    console.log('ws refresh')
     if (Object.keys(cookies).length === 0) setCookie('user', { id: randomstring.generate(), name: 'noName', state: 'matching', wins: 0, losses: 0 })
     const newSocket = new WebSocket('ws://3.14.176.234:8080')
     // new WebSocket('ws://localhost:8080/ws');
@@ -357,6 +358,14 @@ function App() {
         setEnemyTargets(enemyTargets)
         sessionStorage.setItem('targets', JSON.stringify(targets))
       } else if (message.dataType === 'shot') {
+        setEnemyTurnNumber(prev => {
+          if (playerOrder === 'first') {
+            return (turnNumber + 1)
+          }
+          if (playerOrder === 'second') {
+            return (turnNumber - 2)
+          }
+        })
         if (character === 'orangeMan' && bluffing) setBluffing('ready')
         if (character === 'lineMan') {
           if (!Array.isArray(message.index)) {
@@ -373,6 +382,7 @@ function App() {
         }
         if (message.orange) {
           setEnemyBoardState(prev => {
+            const enemyTurnNumber = playerOrder === 'first' ? turnNumber + 1 : turnNumber - 2
             if ((enemyTurnNumber + 1) % 4 !== 0 || message.freeShot) {
               let oldProtected = Object.values(prev).findIndex(i => i.hover === 'protected')
               if (prev[oldProtected]?.hover) prev[oldProtected].hover = false
@@ -430,6 +440,7 @@ function App() {
       }
     };
     newSocket.onopen = () => {
+      console.log('refresh')
       if (cookies?.user?.id) newSocket.send(JSON.stringify({ id: cookies.user.id, turnOrder: true }))
     }
     setSocket(newSocket);
@@ -438,7 +449,20 @@ function App() {
         newSocket.close();
       }
     };
-  }, [turn, bluffing, character, setBluffing, targets, cookies, boatPlacements, boardState, setCookie, setLastShots, enemyTurnNumber])
+  }, [turn,
+    bluffing,
+    character,
+    setBluffing,
+    targets,
+    cookies,
+    boatPlacements,
+    boardState,
+    setCookie,
+    setLastShots,
+    enemyTurnNumber,
+    playerOrder,
+    turnNumber
+  ])
   //updates turnNumber
   useEffect(() => {
     sessionStorage.setItem('turnNumber', JSON.stringify(turnNumber))
@@ -476,19 +500,7 @@ function App() {
       sessionStorage.removeItem('afkTimecode')
     }
   }, [turn, AfkTimeCode, cookies, setCookie])
-  //turn// freeshot tracker 
-  useEffect(() => {
-    if (gameProgress === 'ongoing') {
-      setEnemyTurnNumber(prev => {
-        if (playerOrder === 'first') {
-          return (turnNumber + 1)
-        }
-        if (playerOrder === 'second') {
-          return (turnNumber - 2)
-        }
-      })
-    }
-  }, [turnNumber, gameProgress, playerOrder, enemyFreeShotMiss])
+
 
   const { generateTargets } = useAi()
 
@@ -551,6 +563,7 @@ function App() {
         sessionStorage.clear()
 
       }}>remove cookie</button>
+      {/* {(socket?.readyState !== undefined && gameProgress === 'preplacement') && <div>connected</div>} */}
       <div className={styles.title}>WELCOME TO BATTLESHIP</div>
 
       <div className={styles.boardcontainer}>
