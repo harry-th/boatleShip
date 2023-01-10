@@ -9,7 +9,7 @@ Three character:
 ### orange:  
 1. protects the last square that he fired at, this square cannot be targeted by the opponent on the subsequent turn  
 2. can 'bluff' when doing so you do not receive any information about the success or failure of your shots, although you can still protect squares with your first ability, for each shot fired by the opponent you add a stack of retaliation which can be activated to return 3 shots for each sent by your opponent  
-*this also undoes the shots were done during the bluff*  
+*this also undoes the shots were done during the bluff*
 *additionally there is a mechanic to 'call their bluff' which if done correctly (when the opponent is bluffing) set those shots done during the bluff as real but disengages retaliation.*  
 *if you're thinking 'this is too complicated' you are correct*  
 ### corner:  
