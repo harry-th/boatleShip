@@ -1,70 +1,36 @@
-# Getting Started with Create React App
+# BoatleShip  
+** An enhanced battleship game **  
+* that also requires a refactor and to rethink the server client relationship to maintain game integrity *  
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Three character:  
+line:  
+1.can fire the last two shots fired at him *overwrite orange ability*  
+2. connect any two misses that are unobstructed in between by shots by you or your opponent on your home board(the one that contains your ships)  
+orange:  
+1. protects the last square that he fired at, this square cannot be targeted by the opponent on the subsequent turn  
+2. can 'bluff' when doing so you do not receive any information about the success or failure of your shots, although you can still protect squares with your first ability, for each shot fired by the opponent you add a stack of retaliation which can be activated to return 3 shots for each sent by your opponent  
+*this also undoes the shots were done during the bluff*  
+*additionally there is a mechanic to 'call their bluff' which if done correctly (when the opponent is bluffing) set those shots done during the bluff as real but disengages retaliation.*  
+*if you're thinking 'this is too complicated' you are correct*  
+corner:  
+1. can place his boats around corners  
+2. if you hit the head and rear of any boat the boat is sunk instantly  
 
-## Available Scripts
+### Other rules  
+1. Every fourth turn each player receives an additional second shot for their turn, they can use their abilities twice on these turns except retaliation and 'make line.'  
+2. When a bluff is called falsely, (they were not bluffing) on top of losing your turn your 'free shot' which you would generally receive on your fourth turn is consumed.  
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+##To try out this project  
+Git clone the repo https://github.com/harry-th/boatleShip  
+`npm i` to install the depdencies  
+`ws`  
+`node`  
+`randomString`  
+`react-cookie`  
+`jose`  
+and then  
+`npm start` to run the client on localhost 3000  
+`node server.js` within the `src` directory  
+You can now play with yourself between a browser on chrome and any other (if you have a second browser installed)
+or between chrome and an incognito window  
+I do have it hosted and plan to refine it   
