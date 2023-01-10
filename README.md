@@ -30,7 +30,7 @@ Git clone the repo https://github.com/harry-th/boatleShip
 `jose`  
 and then  
 `npm start` to run the client on localhost 3000  
-`node server.js` within the `src` directory  
+`node server.js` within the `src` directory will run the websocket server  
 You can now play with yourself between a browser on chrome and any other (if you have a second browser installed)
 or between chrome and an incognito window  
 I do have it hosted and plan to refine it   
