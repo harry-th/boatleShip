@@ -1,3 +1,4 @@
+### This code is a far inferior than the refactored BoatleShip 2 but is here for a reference for it as it was essentially functional.
 # BoatleShip  
 ** An enhanced battleship game **  
 *that also requires a refactor and to rethink the server client relationship to maintain game integrity*  
